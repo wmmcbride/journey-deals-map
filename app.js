@@ -1,10 +1,18 @@
-// Journey Alliance Deals Map - Main Application
+// Journey Alliance Deals Map - Dual View Application
 
 // Map initialization
 let map, markers, drawnItems, currentBasemap;
 let allMarkers = [];
 let currentRegion = 'all';
 let drawControl = null;
+let currentView = 'property'; // 'property' or 'hq'
+let currentSortColumn = 'gbv';
+let currentSortDirection = 'desc';
+
+// Get current dataset based on view
+function getCurrentDeals() {
+    return currentView === 'property' ? dualViewData.propertyView : dualViewData.hqView;
+}
 
 // Basemap configurations
 const basemaps = {
@@ -96,7 +104,7 @@ function initMap() {
         }
     });
     
-    // Create markers
+    // Create markers for initial view
     createMarkers();
     
     // Add markers to map
@@ -116,9 +124,12 @@ function initMap() {
     applyFilters();
 }
 
-// Create markers from deal data
+// Create markers from current view data
 function createMarkers() {
-    dealsData.forEach(deal => {
+    allMarkers = [];
+    const deals = getCurrentDeals();
+    
+    deals.forEach(deal => {
         const radius = getMarkerRadius(map.getZoom());
         
         const marker = L.circleMarker([deal.lat, deal.lng], {
@@ -131,16 +142,26 @@ function createMarkers() {
             className: 'custom-deal-marker'
         });
         
-        // Enhanced popup
-        marker.bindPopup(`
+        // Enhanced popup based on view
+        let popupContent = `
             <div class="popup-title">${deal.name}</div>
+            ${deal.companyName ? `<div class="popup-detail"><strong>Company:</strong> ${deal.companyName}</div>` : ''}
             <div class="popup-detail"><strong>Owner:</strong> ${deal.owner}</div>
             <div class="popup-detail"><strong>GBV:</strong> $${(deal.gbv / 1000000).toFixed(2)}M</div>
-            <div class="popup-detail"><strong>Properties:</strong> ${deal.properties || 0} | <strong>Keys:</strong> ${deal.keys || 0}</div>
+        `;
+        
+        if (currentView === 'hq' && deal.totalCompanies > 1) {
+            popupContent += `<div class="popup-detail"><strong>Portfolio:</strong> ${deal.totalCompanies} properties, ${deal.totalProperties} total units</div>`;
+        } else {
+            popupContent += `<div class="popup-detail"><strong>Properties:</strong> ${deal.properties || 0} | <strong>Keys:</strong> ${deal.keys || 0}</div>`;
+        }
+        
+        popupContent += `
             <div class="popup-detail"><strong>Location:</strong> ${deal.city}${deal.state ? ', ' + deal.state : ''}, ${deal.country}</div>
-            ${deal.closeDate ? `<div class="popup-detail"><strong>Close Date:</strong> ${new Date(deal.closeDate).toLocaleDateString()}</div>` : ''}
             <div class="popup-stage" style="background-color: ${deal.color};">${deal.stage}</div>
-        `, {
+        `;
+        
+        marker.bindPopup(popupContent, {
             maxWidth: 300,
             className: 'custom-popup'
         });
@@ -148,6 +169,30 @@ function createMarkers() {
         marker.dealData = deal;
         allMarkers.push(marker);
     });
+}
+
+// Switch between views
+function switchView(newView) {
+    if (newView === currentView) return;
+    
+    currentView = newView;
+    
+    // Update button states
+    document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+    if (newView === 'property') {
+        document.getElementById('propertyViewBtn').classList.add('active');
+    } else {
+        document.getElementById('hqViewBtn').classList.add('active');
+    }
+    
+    // Clear existing markers
+    markers.clearLayers();
+    
+    // Recreate markers from new view
+    createMarkers();
+    
+    // Reapply filters
+    applyFilters();
 }
 
 // Get marker radius based on zoom level
@@ -209,7 +254,8 @@ function applyFilters() {
         const matchesSearch = searchTerm === '' || 
             deal.name.toLowerCase().includes(searchTerm) ||
             deal.city.toLowerCase().includes(searchTerm) ||
-            deal.owner.toLowerCase().includes(searchTerm);
+            deal.owner.toLowerCase().includes(searchTerm) ||
+            (deal.companyName && deal.companyName.toLowerCase().includes(searchTerm));
         
         // Region filter
         let matchesRegion = true;
@@ -231,7 +277,7 @@ function applyFilters() {
             markers.addLayer(marker);
             visibleGBV += deal.gbv;
             visibleCount++;
-            visibleProperties += deal.properties || 0;
+            visibleProperties += deal.properties || deal.totalProperties || 0;
             visibleKeys += deal.keys || 0;
             visibleDeals.push(deal);
         }
@@ -244,15 +290,12 @@ function applyFilters() {
     document.getElementById('statKeys').textContent = visibleKeys.toLocaleString();
     
     // Update subtitle
-    document.getElementById('subtitle').textContent = `${visibleCount} Deals • $${(visibleGBV / 1000000).toFixed(1)}M GBV`;
+    const viewLabel = currentView === 'property' ? 'Property View' : 'HQ View';
+    document.getElementById('subtitle').textContent = `${visibleCount} ${viewLabel} • $${(visibleGBV / 1000000).toFixed(1)}M GBV`;
     
     // Update deal list
     updateDealList(visibleDeals);
 }
-
-// Current sort state
-let currentSortColumn = 'gbv';
-let currentSortDirection = 'desc';
 
 // Update deal list panel
 function updateDealList(deals) {
@@ -275,6 +318,7 @@ function updateDealList(deals) {
             <thead>
                 <tr>
                     <th class="sortable ${currentSortColumn === 'name' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('name')">Deal Name</th>
+                    ${currentView === 'property' ? '<th>Company</th>' : ''}
                     <th class="sortable ${currentSortColumn === 'gbv' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('gbv')">GBV</th>
                     <th class="sortable ${currentSortColumn === 'stage' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('stage')">Stage</th>
                     <th class="sortable ${currentSortColumn === 'owner' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('owner')">Owner</th>
@@ -285,12 +329,13 @@ function updateDealList(deals) {
             </thead>
             <tbody>
                 ${sortedDeals.map(deal => `
-                    <tr onclick="zoomToDeal('${deal.name.replace(/'/g, "\\'")}')">
+                    <tr onclick="zoomToDeal('${deal.name.replace(/'/g, "\\'")}', '${deal.companyName ? deal.companyName.replace(/'/g, "\\'") : ''}')">
                         <td class="deal-name">${deal.name}</td>
+                        ${currentView === 'property' ? `<td class="deal-company">${deal.companyName || ''}</td>` : ''}
                         <td class="deal-gbv">$${(deal.gbv / 1000000).toFixed(2)}M</td>
                         <td><span class="deal-stage-badge" style="background-color: ${deal.color};">${deal.stage}</span></td>
                         <td>${deal.owner}</td>
-                        <td class="deal-metrics">${(deal.properties || 0).toLocaleString()}</td>
+                        <td class="deal-metrics">${((currentView === 'hq' && deal.totalProperties) ? deal.totalProperties : (deal.properties || 0)).toLocaleString()}</td>
                         <td class="deal-metrics">${(deal.keys || 0).toLocaleString()}</td>
                         <td class="deal-location">${deal.city}${deal.state ? ', ' + deal.state : ''}</td>
                     </tr>
@@ -337,9 +382,17 @@ function sortDeals(deals, sortBy) {
         case 'owner-desc':
             return sorted.sort((a, b) => b.owner.localeCompare(a.owner));
         case 'properties-desc':
-            return sorted.sort((a, b) => (b.properties || 0) - (a.properties || 0));
+            return sorted.sort((a, b) => {
+                const propsA = (currentView === 'hq' && a.totalProperties) ? a.totalProperties : (a.properties || 0);
+                const propsB = (currentView === 'hq' && b.totalProperties) ? b.totalProperties : (b.properties || 0);
+                return propsB - propsA;
+            });
         case 'properties-asc':
-            return sorted.sort((a, b) => (a.properties || 0) - (b.properties || 0));
+            return sorted.sort((a, b) => {
+                const propsA = (currentView === 'hq' && a.totalProperties) ? a.totalProperties : (a.properties || 0);
+                const propsB = (currentView === 'hq' && b.totalProperties) ? b.totalProperties : (b.properties || 0);
+                return propsA - propsB;
+            });
         case 'keys-desc':
             return sorted.sort((a, b) => (b.keys || 0) - (a.keys || 0));
         case 'keys-asc':
@@ -361,9 +414,27 @@ function sortDeals(deals, sortBy) {
     }
 }
 
+// Check if deal is in region
+function isInRegion(deal, region) {
+    const bounds = regions[region].bounds;
+    return deal.lat >= bounds[0][0] && deal.lat <= bounds[1][0] &&
+           deal.lng >= bounds[0][1] && deal.lng <= bounds[1][1];
+}
+
+// Filter by drawn region
+function filterByDrawnRegion() {
+    applyFilters();
+}
+
 // Zoom to deal on map (exposed globally for onclick)
-window.zoomToDeal = function(dealName) {
-    const marker = allMarkers.find(m => m.dealData.name === dealName);
+window.zoomToDeal = function(dealName, companyName) {
+    let marker;
+    if (companyName) {
+        marker = allMarkers.find(m => m.dealData.name === dealName && m.dealData.companyName === companyName);
+    } else {
+        marker = allMarkers.find(m => m.dealData.name === dealName);
+    }
+    
     if (marker) {
         map.setView(marker.getLatLng(), 12);
         marker.openPopup();
@@ -387,7 +458,8 @@ function exportToCSV() {
             const matchesSearch = searchTerm === '' || 
                 deal.name.toLowerCase().includes(searchTerm) ||
                 deal.city.toLowerCase().includes(searchTerm) ||
-                deal.owner.toLowerCase().includes(searchTerm);
+                deal.owner.toLowerCase().includes(searchTerm) ||
+                (deal.companyName && deal.companyName.toLowerCase().includes(searchTerm));
             
             let matchesRegion = true;
             if (currentRegion !== 'all') {
@@ -410,20 +482,42 @@ function exportToCSV() {
     const sortedDeals = sortDeals(visibleDeals, `${currentSortColumn}-${currentSortDirection}`);
     
     // Create CSV
-    const headers = ['Deal Name', 'Owner', 'Stage', 'GBV (USD)', 'Properties', 'Keys', 'City', 'State', 'Country', 'Latitude', 'Longitude'];
-    const rows = sortedDeals.map(deal => [
-        deal.name,
-        deal.owner,
-        deal.stage,
-        deal.gbv,
-        deal.properties || 0,
-        deal.keys || 0,
-        deal.city,
-        deal.state || '',
-        deal.country,
-        deal.lat,
-        deal.lng
-    ]);
+    const headers = currentView === 'property' 
+        ? ['Deal Name', 'Company', 'Owner', 'Stage', 'GBV (USD)', 'Properties', 'Keys', 'City', 'State', 'Country', 'Latitude', 'Longitude']
+        : ['Deal Name', 'Owner', 'Stage', 'GBV (USD)', 'Total Properties', 'Keys', 'City', 'State', 'Country', 'Latitude', 'Longitude'];
+    
+    const rows = sortedDeals.map(deal => {
+        if (currentView === 'property') {
+            return [
+                deal.name,
+                deal.companyName || '',
+                deal.owner,
+                deal.stage,
+                deal.gbv,
+                deal.properties || 0,
+                deal.keys || 0,
+                deal.city,
+                deal.state || '',
+                deal.country,
+                deal.lat,
+                deal.lng
+            ];
+        } else {
+            return [
+                deal.name,
+                deal.owner,
+                deal.stage,
+                deal.gbv,
+                deal.totalProperties || 0,
+                deal.keys || 0,
+                deal.city,
+                deal.state || '',
+                deal.country,
+                deal.lat,
+                deal.lng
+            ];
+        }
+    });
     
     const csvContent = [
         headers.join(','),
@@ -435,26 +529,23 @@ function exportToCSV() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `journey-deals-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `journey-deals-${currentView}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-}
-
-// Check if deal is in region
-function isInRegion(deal, region) {
-    const bounds = regions[region].bounds;
-    return deal.lat >= bounds[0][0] && deal.lat <= bounds[1][0] &&
-           deal.lng >= bounds[0][1] && deal.lng <= bounds[1][1];
-}
-
-// Filter by drawn region
-function filterByDrawnRegion() {
-    applyFilters();
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     initMap();
+    
+    // View toggle buttons
+    document.getElementById('propertyViewBtn').addEventListener('click', function() {
+        switchView('property');
+    });
+    
+    document.getElementById('hqViewBtn').addEventListener('click', function() {
+        switchView('hq');
+    });
     
     // Stage filters
     document.querySelectorAll('.stage-filter').forEach(cb => {
@@ -587,6 +678,11 @@ style.innerHTML = `
         filter: brightness(1.2);
         box-shadow: 0 0 12px 3px currentColor !important;
         transition: filter 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .deal-company {
+        font-size: 12px;
+        color: var(--text-secondary);
     }
 `;
 document.head.appendChild(style);

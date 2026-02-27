@@ -86,7 +86,39 @@ body {
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 12px;
+    align-items: center;
+}
+
+.view-toggle-group {
+    display: flex;
+    gap: 0;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.view-toggle-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.view-toggle-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.view-toggle-btn.active {
+    background: var(--accent);
+    color: white;
 }
 
 .icon-btn {
