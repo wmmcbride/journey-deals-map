@@ -582,13 +582,11 @@ style.innerHTML = `
         font-size: 16px;
     }
     
-    .custom-deal-marker {
-        transition: all 0.2s ease;
-    }
-    
-    .custom-deal-marker:hover {
-        transform: scale(1.2);
-        filter: drop-shadow(0 0 8px currentColor);
+    /* Fix hover jitter by using box-shadow instead of transform */
+    .leaflet-interactive:hover {
+        filter: brightness(1.2);
+        box-shadow: 0 0 12px 3px currentColor !important;
+        transition: filter 0.2s ease, box-shadow 0.2s ease;
     }
 `;
 document.head.appendChild(style);
