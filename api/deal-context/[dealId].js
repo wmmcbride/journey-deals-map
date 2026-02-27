@@ -75,24 +75,59 @@ async function getDealDetails(dealId) {
 
 async function getDealNotes(dealId) {
   try {
-    const assocUrl = `https://api.hubapi.com/crm/v3/objects/deals/${dealId}/associations/notes?limit=10`;
-    const assoc = await fetchJSON(assocUrl, {
+    // Get notes directly on deal
+    const dealNotesUrl = `https://api.hubapi.com/crm/v3/objects/deals/${dealId}/associations/notes?limit=10`;
+    const dealNotesAssoc = await fetchJSON(dealNotesUrl, {
       'Authorization': `Bearer ${HUBSPOT_API_KEY}`
     });
     
     const notes = [];
-    for (const item of assoc.results.slice(0, 10)) {
+    
+    // Fetch deal notes
+    for (const item of dealNotesAssoc.results.slice(0, 10)) {
       const noteUrl = `https://api.hubapi.com/crm/v3/objects/notes/${item.toObjectId}?properties=hs_note_body,hs_timestamp`;
       const note = await fetchJSON(noteUrl, {
         'Authorization': `Bearer ${HUBSPOT_API_KEY}`
       });
       notes.push({
         date: note.properties.hs_timestamp,
-        content: note.properties.hs_note_body || ''
+        content: note.properties.hs_note_body || '',
+        source: 'deal'
       });
     }
-    return notes;
+    
+    // Get contacts associated with deal (for Granola transcripts)
+    const contactsUrl = `https://api.hubapi.com/crm/v3/objects/deals/${dealId}/associations/contacts?limit=5`;
+    const contactsAssoc = await fetchJSON(contactsUrl, {
+      'Authorization': `Bearer ${HUBSPOT_API_KEY}`
+    });
+    
+    // Fetch notes from associated contacts (Granola transcripts)
+    for (const contact of contactsAssoc.results.slice(0, 5)) {
+      const contactNotesUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${contact.toObjectId}/associations/notes?limit=5`;
+      const contactNotes = await fetchJSON(contactNotesUrl, {
+        'Authorization': `Bearer ${HUBSPOT_API_KEY}`
+      });
+      
+      for (const noteItem of contactNotes.results.slice(0, 5)) {
+        const noteUrl = `https://api.hubapi.com/crm/v3/objects/notes/${noteItem.toObjectId}?properties=hs_note_body,hs_timestamp`;
+        const note = await fetchJSON(noteUrl, {
+          'Authorization': `Bearer ${HUBSPOT_API_KEY}`
+        });
+        notes.push({
+          date: note.properties.hs_timestamp,
+          content: note.properties.hs_note_body || '',
+          source: 'contact'
+        });
+      }
+    }
+    
+    // Sort by date descending
+    notes.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    return notes.slice(0, 15); // Return top 15 most recent
   } catch(e) {
+    console.error('Error fetching notes:', e);
     return [];
   }
 }
