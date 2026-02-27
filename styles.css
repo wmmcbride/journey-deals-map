@@ -601,20 +601,15 @@ body {
 }
 
 .deal-list-controls {
-    padding: 16px 24px;
+    padding: 12px 24px;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
 }
 
-.sort-select {
-    margin-left: 8px;
-    padding: 6px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 13px;
-    cursor: pointer;
+.deal-list-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 .deal-list-content {
@@ -640,78 +635,107 @@ body {
     background: var(--text-tertiary);
 }
 
-/* Deal Card */
-.deal-card {
+/* Deal Table */
+.deal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.deal-table thead {
+    position: sticky;
+    top: 0;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
-    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
-.deal-card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 2px 8px var(--shadow);
-    transform: translateY(-1px);
-}
-
-.deal-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.deal-card-title {
-    font-size: 16px;
+.deal-table th {
+    padding: 10px 12px;
+    text-align: left;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-}
-
-.deal-card-stage {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    color: white;
+    color: var(--text-secondary);
     text-transform: uppercase;
+    font-size: 11px;
     letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid var(--border-color);
 }
 
-.deal-card-gbv {
-    font-size: 20px;
-    font-weight: 700;
+.deal-table th:hover {
+    color: var(--accent);
+    background: var(--bg-tertiary);
+}
+
+.deal-table th.sortable::after {
+    content: ' ↕';
+    opacity: 0.3;
+    font-size: 10px;
+}
+
+.deal-table th.sorted-asc::after {
+    content: ' ↑';
+    opacity: 1;
     color: var(--accent);
 }
 
-.deal-card-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin-top: 12px;
+.deal-table th.sorted-desc::after {
+    content: ' ↓';
+    opacity: 1;
+    color: var(--accent);
 }
 
-.deal-detail {
-    display: flex;
-    flex-direction: column;
+.deal-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.deal-detail-label {
-    font-size: 11px;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+.deal-table tbody tr:hover {
+    background: var(--bg-secondary);
 }
 
-.deal-detail-value {
-    font-size: 14px;
-    font-weight: 500;
+.deal-table tbody tr:active {
+    background: var(--bg-tertiary);
+}
+
+.deal-table td {
+    padding: 8px 12px;
     color: var(--text-primary);
+}
+
+.deal-table .deal-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.deal-table .deal-gbv {
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.deal-table .deal-stage-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.deal-table .deal-metrics {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}
+
+.deal-table .deal-location {
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 /* Empty State */
@@ -768,7 +792,24 @@ body {
         height: 70vh;
     }
     
-    .deal-card-details {
-        grid-template-columns: 1fr;
+    .deal-table {
+        font-size: 11px;
+    }
+    
+    .deal-table th,
+    .deal-table td {
+        padding: 6px 8px;
+    }
+    
+    .deal-table th {
+        font-size: 10px;
+    }
+    
+    /* Hide some columns on mobile */
+    .deal-table th:nth-child(5),
+    .deal-table td:nth-child(5),
+    .deal-table th:nth-child(6),
+    .deal-table td:nth-child(6) {
+        display: none;
     }
 }

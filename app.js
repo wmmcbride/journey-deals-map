@@ -250,10 +250,13 @@ function applyFilters() {
     updateDealList(visibleDeals);
 }
 
+// Current sort state
+let currentSortColumn = 'gbv';
+let currentSortDirection = 'desc';
+
 // Update deal list panel
 function updateDealList(deals) {
-    const sortBy = document.getElementById('sortBy').value;
-    const sortedDeals = sortDeals(deals, sortBy);
+    const sortedDeals = sortDeals(deals, `${currentSortColumn}-${currentSortDirection}`);
     
     const content = document.getElementById('dealListContent');
     
@@ -267,35 +270,49 @@ function updateDealList(deals) {
         return;
     }
     
-    content.innerHTML = sortedDeals.map(deal => `
-        <div class="deal-card" onclick="zoomToDeal('${deal.name}')">
-            <div class="deal-card-header">
-                <div>
-                    <div class="deal-card-title">${deal.name}</div>
-                    <span class="deal-card-stage" style="background-color: ${deal.color};">${deal.stage}</span>
-                </div>
-                <div class="deal-card-gbv">$${(deal.gbv / 1000000).toFixed(2)}M</div>
-            </div>
-            <div class="deal-card-details">
-                <div class="deal-detail">
-                    <div class="deal-detail-label">Owner</div>
-                    <div class="deal-detail-value">${deal.owner}</div>
-                </div>
-                <div class="deal-detail">
-                    <div class="deal-detail-label">Location</div>
-                    <div class="deal-detail-value">${deal.city}${deal.state ? ', ' + deal.state : ''}, ${deal.country}</div>
-                </div>
-                <div class="deal-detail">
-                    <div class="deal-detail-label">Properties</div>
-                    <div class="deal-detail-value">${(deal.properties || 0).toLocaleString()}</div>
-                </div>
-                <div class="deal-detail">
-                    <div class="deal-detail-label">Keys</div>
-                    <div class="deal-detail-value">${(deal.keys || 0).toLocaleString()}</div>
-                </div>
-            </div>
-        </div>
-    `).join('');
+    content.innerHTML = `
+        <table class="deal-table">
+            <thead>
+                <tr>
+                    <th class="sortable ${currentSortColumn === 'name' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('name')">Deal Name</th>
+                    <th class="sortable ${currentSortColumn === 'gbv' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('gbv')">GBV</th>
+                    <th class="sortable ${currentSortColumn === 'stage' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('stage')">Stage</th>
+                    <th class="sortable ${currentSortColumn === 'owner' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('owner')">Owner</th>
+                    <th class="sortable ${currentSortColumn === 'properties' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('properties')">Props</th>
+                    <th class="sortable ${currentSortColumn === 'keys' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('keys')">Keys</th>
+                    <th class="sortable ${currentSortColumn === 'location' ? 'sorted-' + currentSortDirection : ''}" onclick="sortColumn('location')">Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedDeals.map(deal => `
+                    <tr onclick="zoomToDeal('${deal.name.replace(/'/g, "\\'")}')">
+                        <td class="deal-name">${deal.name}</td>
+                        <td class="deal-gbv">$${(deal.gbv / 1000000).toFixed(2)}M</td>
+                        <td><span class="deal-stage-badge" style="background-color: ${deal.color};">${deal.stage}</span></td>
+                        <td>${deal.owner}</td>
+                        <td class="deal-metrics">${(deal.properties || 0).toLocaleString()}</td>
+                        <td class="deal-metrics">${(deal.keys || 0).toLocaleString()}</td>
+                        <td class="deal-location">${deal.city}${deal.state ? ', ' + deal.state : ''}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// Sort column (exposed globally for onclick)
+window.sortColumn = function(column) {
+    if (currentSortColumn === column) {
+        // Toggle direction
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        // New column, default to desc for numbers, asc for text
+        currentSortColumn = column;
+        currentSortDirection = ['gbv', 'properties', 'keys'].includes(column) ? 'desc' : 'asc';
+    }
+    
+    // Re-apply filters to update display
+    applyFilters();
 }
 
 // Sort deals
@@ -311,21 +328,41 @@ function sortDeals(deals, sortBy) {
             return sorted.sort((a, b) => a.name.localeCompare(b.name));
         case 'name-desc':
             return sorted.sort((a, b) => b.name.localeCompare(a.name));
-        case 'stage':
+        case 'stage-asc':
             return sorted.sort((a, b) => a.stage.localeCompare(b.stage));
-        case 'owner':
+        case 'stage-desc':
+            return sorted.sort((a, b) => b.stage.localeCompare(a.stage));
+        case 'owner-asc':
             return sorted.sort((a, b) => a.owner.localeCompare(b.owner));
+        case 'owner-desc':
+            return sorted.sort((a, b) => b.owner.localeCompare(a.owner));
         case 'properties-desc':
             return sorted.sort((a, b) => (b.properties || 0) - (a.properties || 0));
+        case 'properties-asc':
+            return sorted.sort((a, b) => (a.properties || 0) - (b.properties || 0));
         case 'keys-desc':
             return sorted.sort((a, b) => (b.keys || 0) - (a.keys || 0));
+        case 'keys-asc':
+            return sorted.sort((a, b) => (a.keys || 0) - (b.keys || 0));
+        case 'location-asc':
+            return sorted.sort((a, b) => {
+                const locA = `${a.city}, ${a.state || ''}, ${a.country}`;
+                const locB = `${b.city}, ${b.state || ''}, ${b.country}`;
+                return locA.localeCompare(locB);
+            });
+        case 'location-desc':
+            return sorted.sort((a, b) => {
+                const locA = `${a.city}, ${a.state || ''}, ${a.country}`;
+                const locB = `${b.city}, ${b.state || ''}, ${b.country}`;
+                return locB.localeCompare(locA);
+            });
         default:
             return sorted;
     }
 }
 
-// Zoom to deal on map
-function zoomToDeal(dealName) {
+// Zoom to deal on map (exposed globally for onclick)
+window.zoomToDeal = function(dealName) {
     const marker = allMarkers.find(m => m.dealData.name === dealName);
     if (marker) {
         map.setView(marker.getLatLng(), 12);
@@ -369,8 +406,8 @@ function exportToCSV() {
             return matchesStage && matchesOwner && matchesSearch && matchesRegion && matchesDrawn;
         });
     
-    // Sort
-    const sortedDeals = sortDeals(visibleDeals, document.getElementById('sortBy').value);
+    // Sort using current sort state
+    const sortedDeals = sortDeals(visibleDeals, `${currentSortColumn}-${currentSortDirection}`);
     
     // Create CSV
     const headers = ['Deal Name', 'Owner', 'Stage', 'GBV (USD)', 'Properties', 'Keys', 'City', 'State', 'Country', 'Latitude', 'Longitude'];
@@ -511,11 +548,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close deal list
     document.getElementById('closeDealList').addEventListener('click', function() {
         document.getElementById('dealListPanel').classList.remove('open');
-    });
-    
-    // Sort change
-    document.getElementById('sortBy').addEventListener('change', function() {
-        applyFilters();
     });
     
     // Export CSV
