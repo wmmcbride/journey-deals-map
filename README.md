@@ -6,6 +6,7 @@ Interactive web map showing all Journey Alliance deals (closed + pipeline) with 
 
 The map automatically stays up-to-date with your HubSpot data:
 
+### **Deal Data Sync**
 - **Daily sync:** Runs every day at 12 AM CST (6 AM UTC)
 - **Manual trigger:** Click "Actions" → "Sync HubSpot Data" → "Run workflow" in GitHub
 - **What it syncs:**
@@ -15,6 +16,16 @@ The map automatically stays up-to-date with your HubSpot data:
   - Property View (individual properties) + HQ View (headquarters rollup)
 
 Data is pulled fresh from HubSpot API, geocoded, and the site rebuilds automatically within 2-3 minutes.
+
+### **Contact-Deal Association (Granola Integration)**
+- **Daily sync:** Runs every day at 1 AM CST (7 AM UTC)
+- **Manual trigger:** Click "Actions" → "Associate Contacts with Deals" → "Run workflow" in GitHub
+- **What it does:**
+  - Finds contacts with notes (Granola meeting transcripts)
+  - Associates them with their company's active deals
+  - Enables Granola transcripts to appear in deal "View Details" modal
+
+**Why this matters:** Granola creates meeting notes on Contact records, not Deals. This script automatically bridges that gap so you see meeting transcripts when viewing deal context.
 
 ### Setup (One-Time)
 
