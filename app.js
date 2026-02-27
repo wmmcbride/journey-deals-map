@@ -145,7 +145,14 @@ function createMarkers() {
         // Enhanced popup based on view
         let popupContent = `
             <div class="popup-title">${deal.name}</div>
-            ${deal.companyName ? `<div class="popup-detail"><strong>Company:</strong> ${deal.companyName}</div>` : ''}
+        `;
+        
+        // Show parent company in Property View
+        if (currentView === 'property' && deal.companyName && deal.companyName !== deal.name) {
+            popupContent += `<div class="popup-detail"><strong>Property:</strong> ${deal.companyName}</div>`;
+        }
+        
+        popupContent += `
             <div class="popup-detail"><strong>Owner:</strong> ${deal.owner}</div>
             <div class="popup-detail"><strong>GBV:</strong> $${(deal.gbv / 1000000).toFixed(2)}M</div>
         `;
@@ -159,6 +166,7 @@ function createMarkers() {
         popupContent += `
             <div class="popup-detail"><strong>Location:</strong> ${deal.city}${deal.state ? ', ' + deal.state : ''}, ${deal.country}</div>
             <div class="popup-stage" style="background-color: ${deal.color};">${deal.stage}</div>
+            <button class="view-details-btn" onclick="showDealContext('${deal.id}', '${deal.name.replace(/'/g, "\\'")}')">📋 View Details</button>
         `;
         
         marker.bindPopup(popupContent, {
@@ -646,6 +654,140 @@ document.addEventListener('DOMContentLoaded', function() {
         exportToCSV();
     });
 });
+
+// Show deal context modal
+window.showDealContext = async function(dealId, dealName) {
+    const modal = document.getElementById('dealContextModal');
+    const modalTitle = document.getElementById('modalDealName');
+    const modalBody = document.getElementById('modalBody');
+    
+    // Show modal with loading state
+    modalTitle.textContent = dealName;
+    modalBody.innerHTML = `
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Fetching deal context from HubSpot...</p>
+        </div>
+    `;
+    modal.classList.add('open');
+    
+    try {
+        // Call backend API to fetch deal context
+        // TODO: Replace with your deployed API endpoint
+        const apiUrl = `https://journey-deals-api.vercel.app/api/deal-context/${dealId}`;
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Render the context
+        renderDealContext(data, modalBody);
+        
+    } catch(error) {
+        console.error('Error fetching deal context:', error);
+        modalBody.innerHTML = `
+            <div class="context-section">
+                <h3>⚠️ Unable to Load Deal Context</h3>
+                <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                    The backend API is not yet deployed. To enable this feature:
+                    <br><br>
+                    <strong>Option 1: Deploy the API</strong><br>
+                    Deploy the backend API from <code>api/</code> folder to Vercel/Netlify<br>
+                    Update the API URL in app.js<br><br>
+                    <strong>Option 2: Use OpenClaw</strong><br>
+                    Ask Atlas: "Show me context for deal ${dealId}"<br><br>
+                    <strong>Deal ID:</strong> ${dealId}
+                </p>
+            </div>
+        `;
+    }
+}
+
+// Close deal context modal
+window.closeDealContext = function() {
+    document.getElementById('dealContextModal').classList.remove('open');
+}
+
+// Render deal context in modal
+function renderDealContext(data, container) {
+    let html = '';
+    
+    // AI Summary at top
+    if (data.summary) {
+        html += `
+            <div class="ai-summary">
+                <div class="ai-summary-header">
+                    🤖 AI Summary
+                </div>
+                <div>${data.summary}</div>
+            </div>
+        `;
+    }
+    
+    // Deal Details
+    if (data.deal) {
+        html += `
+            <div class="context-section">
+                <h3>📋 Deal Information</h3>
+                <div style="font-size: 14px; line-height: 1.8;">
+                    ${data.deal.description ? `<p><strong>Description:</strong> ${data.deal.description}</p>` : ''}
+                    ${data.deal.nextStep ? `<p><strong>Next Step:</strong> ${data.deal.nextStep}</p>` : ''}
+                    ${data.deal.lastModified ? `<p><strong>Last Modified:</strong> ${new Date(data.deal.lastModified).toLocaleDateString()}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Recent Activity Timeline
+    if (data.timeline && data.timeline.length > 0) {
+        html += `
+            <div class="context-section">
+                <h3>📅 Recent Activity</h3>
+        `;
+        
+        data.timeline.forEach((item, index) => {
+            const isRecent = index < 3;
+            html += `
+                <div class="timeline-item ${isRecent ? 'recent' : ''}">
+                    <div class="timeline-header">
+                        <span class="timeline-type">${item.type}</span>
+                        <span class="timeline-date">${new Date(item.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="timeline-content">${item.content}</div>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+    }
+    
+    // Notes
+    if (data.notes && data.notes.length > 0) {
+        html += `
+            <div class="context-section">
+                <h3>📝 Notes</h3>
+        `;
+        
+        data.notes.slice(0, 5).forEach(note => {
+            html += `
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <span class="timeline-type">Note</span>
+                        <span class="timeline-date">${new Date(note.date).toLocaleDateString()}</span>
+                    </div>
+                    <div class="timeline-content">${note.content}</div>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+    }
+    
+    container.innerHTML = html;
+}
 
 // Add custom cluster icon styles
 const style = document.createElement('style');

@@ -175,6 +175,23 @@
         </div>
     </div>
     
+    <!-- Deal Context Modal -->
+    <div class="deal-context-modal" id="dealContextModal">
+        <div class="modal-backdrop" onclick="closeDealContext()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalDealName">Deal Details</h2>
+                <button class="modal-close" onclick="closeDealContext()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading deal context from HubSpot...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Deal List Panel (Toggle) -->
     <button class="deal-list-toggle" id="dealListToggle">
         📋 View Deal List
