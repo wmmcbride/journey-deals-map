@@ -12,8 +12,16 @@ const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
 function fetchJSON(url, headers = {}) {
+  const parsedUrl = new URL(url);
+  const options = {
+    hostname: parsedUrl.hostname,
+    path: parsedUrl.pathname + parsedUrl.search,
+    method: 'GET',
+    headers: headers
+  };
+  
   return new Promise((resolve, reject) => {
-    https.get(url, { headers }, (res) => {
+    https.get(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
