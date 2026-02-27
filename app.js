@@ -673,8 +673,7 @@ window.showDealContext = async function(dealId, dealName) {
     
     try {
         // Call backend API to fetch deal context
-        // TODO: Replace with your deployed API endpoint
-        const apiUrl = `https://journey-deals-api.vercel.app/api/deal-context/${dealId}`;
+        const apiUrl = `https://journey-map-enhanced.vercel.app/api/deal-context/${dealId}`;
         
         const response = await fetch(apiUrl);
         if (!response.ok) {

@@ -4,9 +4,5 @@
       "memory": 1024,
       "maxDuration": 30
     }
-  },
-  "env": {
-    "HUBSPOT_API_KEY": "@hubspot-api-key",
-    "ANTHROPIC_API_KEY": "@anthropic-api-key"
   }
 }
