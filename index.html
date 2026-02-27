@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey Alliance Deals Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1>Journey Alliance</h1>
+            <div class="subtitle" id="subtitle">103 Deals • $845M GBV</div>
+        </div>
+        <div class="header-actions">
+            <button id="darkModeToggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
+            <button id="resetView" class="icon-btn" title="Reset View">🌍</button>
+        </div>
+    </div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-toggle" id="sidebarToggle">
+            <span>◀</span>
+        </div>
+        
+        <div class="sidebar-content">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search deals..." />
+            
+            <!-- Region Quick Filters -->
+            <div class="filter-section">
+                <h3>Quick Regions</h3>
+                <div class="region-buttons">
+                    <button class="region-btn" data-region="north-america">🇺🇸 North America</button>
+                    <button class="region-btn" data-region="europe">🇪🇺 Europe</button>
+                    <button class="region-btn" data-region="asia">🌏 Asia/Pacific</button>
+                    <button class="region-btn" data-region="latin-america">🌎 Latin America</button>
+                    <button class="region-btn" data-region="africa">🌍 Africa</button>
+                    <button class="region-btn active" data-region="all">🌐 All</button>
+                </div>
+            </div>
+            
+            <!-- Draw Tools -->
+            <div class="filter-section">
+                <h3>Custom Region</h3>
+                <div class="draw-tools">
+                    <button id="drawCircle" class="tool-btn">⭕ Draw Circle</button>
+                    <button id="drawPolygon" class="tool-btn">▢ Draw Polygon</button>
+                    <button id="clearDrawing" class="tool-btn secondary">✕ Clear</button>
+                </div>
+            </div>
+            
+            <!-- Basemap Selector -->
+            <div class="filter-section">
+                <h3>Map Style</h3>
+                <select id="basemapSelector" class="styled-select">
+                    <option value="light">Light (Default)</option>
+                    <option value="dark">Dark</option>
+                    <option value="satellite">Satellite</option>
+                    <option value="minimal">Minimal</option>
+                </select>
+            </div>
+            
+            <!-- Stage Filter -->
+            <div class="filter-section">
+                <h3>Deal Stage</h3>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Closed Won" checked>
+                    <span class="checkmark" style="background: #2e7d32;"></span>
+                    <span>Closed Won</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Contracting" checked>
+                    <span class="checkmark" style="background: #1565c0;"></span>
+                    <span>Contracting</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Decision & Approval" checked>
+                    <span class="checkmark" style="background: #1976d2;"></span>
+                    <span>Decision & Approval</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Solution & Business Alignment" checked>
+                    <span class="checkmark" style="background: #42a5f5;"></span>
+                    <span>Solution & Alignment</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Discovery & Stakeholders" checked>
+                    <span class="checkmark" style="background: #64b5f6;"></span>
+                    <span>Discovery</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="stage-filter" value="Evaluation Accepted" checked>
+                    <span class="checkmark" style="background: #90caf9;"></span>
+                    <span>Evaluation</span>
+                </label>
+            </div>
+            
+            <!-- Owner Filter -->
+            <div class="filter-section">
+                <h3>Deal Owner</h3>
+                <select id="ownerFilter" class="styled-select">
+                    <option value="all">All Owners</option>
+                    <option value="Cameron DeJean">Cameron DeJean</option>
+                    <option value="Adam Terrell">Adam Terrell</option>
+                    <option value="John Sutton">John Sutton</option>
+                    <option value="Zach Busekrus">Zach Busekrus</option>
+                    <option value="Andrew Collins">Andrew Collins</option>
+                    <option value="Carolyn Schneider">Carolyn Schneider</option>
+                </select>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats-box">
+                <h3>Visible Deals</h3>
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statGBV">$0</div>
+                        <div class="stat-label">Total GBV</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statCount">0</div>
+                        <div class="stat-label">Deals</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statProperties">0</div>
+                        <div class="stat-label">Properties</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statKeys">0</div>
+                        <div class="stat-label">Keys</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="legend" id="legend">
+        <h4>Deal Stages</h4>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #2e7d32;"></div>
+            <span>Closed Won</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #1565c0;"></div>
+            <span>Contracting</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #1976d2;"></div>
+            <span>Decision</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #42a5f5;"></div>
+            <span>Solution</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #64b5f6;"></div>
+            <span>Discovery</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #90caf9;"></div>
+            <span>Evaluation</span>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="deals-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
