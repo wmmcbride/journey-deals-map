@@ -1,6 +1,32 @@
 # Journey Alliance Deals Map
 
-Interactive web map showing all Journey Alliance deals (closed + pipeline) with advanced filtering, region selection, and custom drawing tools.
+Interactive web map showing all Journey Alliance deals (closed + pipeline) with **automatic HubSpot syncing**, advanced filtering, region selection, and custom drawing tools.
+
+## 🔄 Auto-Sync from HubSpot
+
+The map automatically stays up-to-date with your HubSpot data:
+
+- **Daily sync:** Runs every day at 12 AM CST (6 AM UTC)
+- **Manual trigger:** Click "Actions" → "Sync HubSpot Data" → "Run workflow" in GitHub
+- **What it syncs:**
+  - All Alliance New Business deals
+  - Company associations & addresses
+  - Deal stages, owners, GBV, properties, keys
+  - Property View (individual properties) + HQ View (headquarters rollup)
+
+Data is pulled fresh from HubSpot API, geocoded, and the site rebuilds automatically within 2-3 minutes.
+
+### Setup (One-Time)
+
+The HubSpot API key is stored securely in GitHub Secrets:
+
+1. Go to: https://github.com/wmmcbride/journey-deals-map/settings/secrets/actions
+2. Click "New repository secret"
+3. Name: `HUBSPOT_API_KEY`
+4. Value: Your HubSpot API key
+5. Click "Add secret"
+
+**The sync is already configured and ready to run!**
 
 ## Features
 
