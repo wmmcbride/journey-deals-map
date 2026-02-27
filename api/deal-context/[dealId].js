@@ -104,13 +104,15 @@ async function getDealNotes(dealId) {
     
     // Fetch notes from associated contacts (Granola transcripts)
     for (const contact of contactsAssoc.results.slice(0, 5)) {
-      const contactNotesUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${contact.toObjectId}/associations/notes?limit=5`;
+      const contactId = contact.toObjectId || contact.id; // Handle both formats
+      const contactNotesUrl = `https://api.hubapi.com/crm/v3/objects/contacts/${contactId}/associations/notes?limit=5`;
       const contactNotes = await fetchJSON(contactNotesUrl, {
         'Authorization': `Bearer ${HUBSPOT_API_KEY}`
       });
       
       for (const noteItem of contactNotes.results.slice(0, 5)) {
-        const noteUrl = `https://api.hubapi.com/crm/v3/objects/notes/${noteItem.toObjectId}?properties=hs_note_body,hs_timestamp`;
+        const noteId = noteItem.toObjectId || noteItem.id; // Handle both formats
+        const noteUrl = `https://api.hubapi.com/crm/v3/objects/notes/${noteId}?properties=hs_note_body,hs_timestamp`;
         const note = await fetchJSON(noteUrl, {
           'Authorization': `Bearer ${HUBSPOT_API_KEY}`
         });
