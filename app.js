@@ -194,6 +194,7 @@ function applyFilters() {
     let visibleCount = 0;
     let visibleProperties = 0;
     let visibleKeys = 0;
+    let visibleDeals = [];
     
     allMarkers.forEach(marker => {
         const deal = marker.dealData;
@@ -232,6 +233,7 @@ function applyFilters() {
             visibleCount++;
             visibleProperties += deal.properties || 0;
             visibleKeys += deal.keys || 0;
+            visibleDeals.push(deal);
         }
     });
     
@@ -243,6 +245,162 @@ function applyFilters() {
     
     // Update subtitle
     document.getElementById('subtitle').textContent = `${visibleCount} Deals • $${(visibleGBV / 1000000).toFixed(1)}M GBV`;
+    
+    // Update deal list
+    updateDealList(visibleDeals);
+}
+
+// Update deal list panel
+function updateDealList(deals) {
+    const sortBy = document.getElementById('sortBy').value;
+    const sortedDeals = sortDeals(deals, sortBy);
+    
+    const content = document.getElementById('dealListContent');
+    
+    if (sortedDeals.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <div>No deals match your current filters</div>
+            </div>
+        `;
+        return;
+    }
+    
+    content.innerHTML = sortedDeals.map(deal => `
+        <div class="deal-card" onclick="zoomToDeal('${deal.name}')">
+            <div class="deal-card-header">
+                <div>
+                    <div class="deal-card-title">${deal.name}</div>
+                    <span class="deal-card-stage" style="background-color: ${deal.color};">${deal.stage}</span>
+                </div>
+                <div class="deal-card-gbv">$${(deal.gbv / 1000000).toFixed(2)}M</div>
+            </div>
+            <div class="deal-card-details">
+                <div class="deal-detail">
+                    <div class="deal-detail-label">Owner</div>
+                    <div class="deal-detail-value">${deal.owner}</div>
+                </div>
+                <div class="deal-detail">
+                    <div class="deal-detail-label">Location</div>
+                    <div class="deal-detail-value">${deal.city}${deal.state ? ', ' + deal.state : ''}, ${deal.country}</div>
+                </div>
+                <div class="deal-detail">
+                    <div class="deal-detail-label">Properties</div>
+                    <div class="deal-detail-value">${(deal.properties || 0).toLocaleString()}</div>
+                </div>
+                <div class="deal-detail">
+                    <div class="deal-detail-label">Keys</div>
+                    <div class="deal-detail-value">${(deal.keys || 0).toLocaleString()}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Sort deals
+function sortDeals(deals, sortBy) {
+    const sorted = [...deals];
+    
+    switch(sortBy) {
+        case 'gbv-desc':
+            return sorted.sort((a, b) => b.gbv - a.gbv);
+        case 'gbv-asc':
+            return sorted.sort((a, b) => a.gbv - b.gbv);
+        case 'name-asc':
+            return sorted.sort((a, b) => a.name.localeCompare(b.name));
+        case 'name-desc':
+            return sorted.sort((a, b) => b.name.localeCompare(a.name));
+        case 'stage':
+            return sorted.sort((a, b) => a.stage.localeCompare(b.stage));
+        case 'owner':
+            return sorted.sort((a, b) => a.owner.localeCompare(b.owner));
+        case 'properties-desc':
+            return sorted.sort((a, b) => (b.properties || 0) - (a.properties || 0));
+        case 'keys-desc':
+            return sorted.sort((a, b) => (b.keys || 0) - (a.keys || 0));
+        default:
+            return sorted;
+    }
+}
+
+// Zoom to deal on map
+function zoomToDeal(dealName) {
+    const marker = allMarkers.find(m => m.dealData.name === dealName);
+    if (marker) {
+        map.setView(marker.getLatLng(), 12);
+        marker.openPopup();
+        // Close deal list
+        document.getElementById('dealListPanel').classList.remove('open');
+    }
+}
+
+// Export to CSV
+function exportToCSV() {
+    const selectedStages = Array.from(document.querySelectorAll('.stage-filter:checked')).map(cb => cb.value);
+    const selectedOwner = document.getElementById('ownerFilter').value;
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+    
+    // Get visible deals (same logic as applyFilters)
+    const visibleDeals = allMarkers
+        .map(m => m.dealData)
+        .filter(deal => {
+            const matchesStage = selectedStages.includes(deal.stage);
+            const matchesOwner = selectedOwner === 'all' || deal.owner === selectedOwner;
+            const matchesSearch = searchTerm === '' || 
+                deal.name.toLowerCase().includes(searchTerm) ||
+                deal.city.toLowerCase().includes(searchTerm) ||
+                deal.owner.toLowerCase().includes(searchTerm);
+            
+            let matchesRegion = true;
+            if (currentRegion !== 'all') {
+                matchesRegion = isInRegion(deal, currentRegion);
+            }
+            
+            let matchesDrawn = true;
+            if (drawnItems.getLayers().length > 0) {
+                const drawnLayer = drawnItems.getLayers()[0];
+                const latlng = L.latLng(deal.lat, deal.lng);
+                matchesDrawn = drawnLayer.getBounds ? 
+                    drawnLayer.getBounds().contains(latlng) : 
+                    (drawnLayer.getLatLng().distanceTo(latlng) <= drawnLayer.getRadius());
+            }
+            
+            return matchesStage && matchesOwner && matchesSearch && matchesRegion && matchesDrawn;
+        });
+    
+    // Sort
+    const sortedDeals = sortDeals(visibleDeals, document.getElementById('sortBy').value);
+    
+    // Create CSV
+    const headers = ['Deal Name', 'Owner', 'Stage', 'GBV (USD)', 'Properties', 'Keys', 'City', 'State', 'Country', 'Latitude', 'Longitude'];
+    const rows = sortedDeals.map(deal => [
+        deal.name,
+        deal.owner,
+        deal.stage,
+        deal.gbv,
+        deal.properties || 0,
+        deal.keys || 0,
+        deal.city,
+        deal.state || '',
+        deal.country,
+        deal.lat,
+        deal.lng
+    ]);
+    
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `journey-deals-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 // Check if deal is in region
@@ -343,6 +501,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sidebar toggle
     document.getElementById('sidebarToggle').addEventListener('click', function() {
         document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+    
+    // Deal list toggle
+    document.getElementById('dealListToggle').addEventListener('click', function() {
+        document.getElementById('dealListPanel').classList.add('open');
+    });
+    
+    // Close deal list
+    document.getElementById('closeDealList').addEventListener('click', function() {
+        document.getElementById('dealListPanel').classList.remove('open');
+    });
+    
+    // Sort change
+    document.getElementById('sortBy').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    // Export CSV
+    document.getElementById('exportCSV').addEventListener('click', function() {
+        exportToCSV();
     });
 });
 
