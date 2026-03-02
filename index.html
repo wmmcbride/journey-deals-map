@@ -1410,6 +1410,9 @@
     
     <!-- Load Deals Data -->
     <script src="deals-data-dual.js"></script>
+    
+    <!-- Load Complete Deals Dataset (all 355 deals including unmapped) -->
+    <script src="all-deals-complete.js"></script>
 
     <script>
         // HubSpot Portal ID (Journey Rewards)
@@ -1439,8 +1442,9 @@
         if (typeof dealsDataProperty !== 'undefined') {
             allDeals = dealsDataProperty || [];
         }
-        if (typeof window.allDealsData !== 'undefined') {
-            allDealsData = window.allDealsData || [];
+        // Load complete dataset from all-deals-complete.js
+        if (typeof allDealsComplete !== 'undefined') {
+            allDealsData = allDealsComplete || [];
         }
         
         // Log status
@@ -1906,17 +1910,21 @@
                     
                     // Get deal properties (handle both allDealsData and allDeals formats)
                     const dealName = deal.dealname || deal.name || 'Unnamed Deal';
-                    const dealOwner = deal.owner || 'Unknown';
+                    const dealOwner = deal.ownerName || deal.owner || 'Unattributed';
                     const dealGBV = parseFloat(deal.gbv__rollup_ || deal.gbv || 0);
-                    const dealId = deal.hs_object_id || deal.id;
+                    const dealId = deal.dealId || deal.hs_object_id || deal.id;
                     
                     // Calculate days in stage (if date available)
                     let daysInStage = '-';
-                    const closeDate = deal.closedate || deal.closeDate;
-                    if (closeDate) {
-                        const dateMoved = new Date(closeDate);
-                        const daysSince = Math.floor((Date.now() - dateMoved.getTime()) / (1000 * 60 * 60 * 24));
-                        daysInStage = daysSince + ' days';
+                    if (deal.daysInStage) {
+                        daysInStage = deal.daysInStage + ' days';
+                    } else {
+                        const closeDate = deal.closedate || deal.closeDate;
+                        if (closeDate) {
+                            const dateMoved = new Date(closeDate);
+                            const daysSince = Math.floor((Date.now() - dateMoved.getTime()) / (1000 * 60 * 60 * 24));
+                            daysInStage = daysSince + ' days';
+                        }
                     }
                     
                     // HubSpot deal URL
