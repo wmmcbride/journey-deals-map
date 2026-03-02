@@ -167,11 +167,223 @@
             height: 100%;
             padding: 0;
             margin: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         #map-container {
             width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Stage Filter Controls */
+        .stage-filters {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .filter-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        .btn-clear-filters {
+            padding: 6px 12px;
+            background: var(--light-gray);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-clear-filters:hover {
+            background: var(--border);
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--teal);
+            background: rgba(13, 148, 136, 0.05);
+        }
+
+        .filter-chip.active {
+            background: var(--teal);
+            border-color: var(--teal);
+            color: white;
+        }
+
+        .filter-chip.active .chip-icon {
+            filter: brightness(0) invert(1);
+        }
+
+        .chip-count {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .filter-summary {
+            font-size: 14px;
+            color: var(--charcoal);
+        }
+
+        .filter-summary strong {
+            color: var(--navy);
+        }
+
+        /* Unmapped Deals Section */
+        .unmapped-deals-section {
+            padding: 32px 24px;
+            background: #fff8e1;
+            border-top: 4px solid #f59e0b;
+            overflow-y: auto;
+            flex-shrink: 0;
+            max-height: 40vh;
+        }
+
+        .unmapped-header {
+            margin-bottom: 24px;
+        }
+
+        .unmapped-header h3 {
+            margin: 0 0 8px 0;
+            color: #d97706;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .unmapped-header p {
+            margin: 0;
+            color: #78350f;
+            font-size: 14px;
+        }
+
+        .unmapped-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #fbbf24;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #d97706;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #78350f;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .unmapped-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            border-collapse: collapse;
+        }
+
+        .unmapped-table thead {
+            background: #d97706;
+            color: white;
+        }
+
+        .unmapped-table th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .unmapped-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .unmapped-table tbody tr:hover {
+            background: var(--light-gray);
+        }
+
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--light-gray);
+            color: var(--navy);
+        }
+
+        .unmapped-actions {
+            text-align: center;
+        }
+
+        .unmapped-actions button {
+            padding: 12px 24px;
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 600;
+        }
+
+        .unmapped-actions button:hover {
+            background: var(--teal);
+        }
+
+        .help-text {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #78350f;
         }
 
         .table-container { overflow-x: auto; margin-top: 20px; }
@@ -682,6 +894,36 @@
             .deals-detail-table td {
                 padding: 8px 4px;
             }
+            /* Stage filters on mobile */
+            .filter-chips {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 8px;
+            }
+            
+            .filter-chip {
+                flex-shrink: 0;
+                font-size: 16px;
+                padding: 10px 18px;
+            }
+
+            /* Unmapped section on mobile */
+            .unmapped-deals-section {
+                max-height: 50vh;
+            }
+
+            .unmapped-stats {
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .unmapped-table {
+                font-size: 12px;
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
         }
 
         /* Larger touch targets for all interactive elements */
@@ -837,7 +1079,105 @@
 
         <!-- Tab 2: Map -->
         <div id="tab-map" class="tab-content">
+            <!-- Stage Filters -->
+            <div class="stage-filters">
+                <div class="filter-header">
+                    <h3>Filter by Stage</h3>
+                    <button class="btn-clear-filters" onclick="resetStageFilters()">Show All</button>
+                </div>
+                
+                <div class="filter-chips">
+                    <button class="filter-chip active" data-stage="closed-won" onclick="toggleStageFilter('closed-won')">
+                        <span class="chip-icon">✅</span>
+                        <span class="chip-label">Closed Won</span>
+                        <span class="chip-count" id="count-closed-won">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip active" data-stage="contracting" onclick="toggleStageFilter('contracting')">
+                        <span class="chip-icon">📝</span>
+                        <span class="chip-label">Contracting</span>
+                        <span class="chip-count" id="count-contracting">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip active" data-stage="decision" onclick="toggleStageFilter('decision')">
+                        <span class="chip-icon">🤝</span>
+                        <span class="chip-label">Decision</span>
+                        <span class="chip-count" id="count-decision">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip active" data-stage="solution" onclick="toggleStageFilter('solution')">
+                        <span class="chip-icon">💡</span>
+                        <span class="chip-label">Solution</span>
+                        <span class="chip-count" id="count-solution">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip active" data-stage="discovery" onclick="toggleStageFilter('discovery')">
+                        <span class="chip-icon">🔍</span>
+                        <span class="chip-label">Discovery</span>
+                        <span class="chip-count" id="count-discovery">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip active" data-stage="evaluation" onclick="toggleStageFilter('evaluation')">
+                        <span class="chip-icon">📊</span>
+                        <span class="chip-label">Evaluation</span>
+                        <span class="chip-count" id="count-evaluation">(0)</span>
+                    </button>
+                    
+                    <button class="filter-chip" data-stage="closed-lost" onclick="toggleStageFilter('closed-lost')">
+                        <span class="chip-icon">❌</span>
+                        <span class="chip-label">Closed Lost</span>
+                        <span class="chip-count" id="count-closed-lost">(0)</span>
+                    </button>
+                </div>
+                
+                <div class="filter-summary">
+                    Showing <strong id="visible-count">0</strong> of <strong id="total-count">0</strong> deals
+                    (<strong id="mapped-count">0</strong> on map, <strong id="unmapped-count">0</strong> without location)
+                </div>
+            </div>
+
+            <!-- Map Container -->
             <div id="map-container"></div>
+
+            <!-- Unmapped Deals Section -->
+            <div class="unmapped-deals-section" id="unmapped-section" style="display: none;">
+                <div class="unmapped-header">
+                    <h3>⚠️ Deals Without Location Data</h3>
+                    <p>These deals need company addresses in HubSpot to appear on the map</p>
+                </div>
+                
+                <div class="unmapped-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="unmapped-total">0</div>
+                        <div class="stat-label">Deals Missing Location</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="unmapped-gbv">$0</div>
+                        <div class="stat-label">Total GBV</div>
+                    </div>
+                </div>
+                
+                <table class="unmapped-table">
+                    <thead>
+                        <tr>
+                            <th>Deal Name</th>
+                            <th>Stage</th>
+                            <th>Owner</th>
+                            <th>GBV</th>
+                            <th>Company</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unmapped-tbody">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+                
+                <div class="unmapped-actions">
+                    <button onclick="exportUnmappedDeals()">📥 Export Unmapped Deals CSV</button>
+                    <p class="help-text">Export this list to update addresses in HubSpot, then re-sync the map</p>
+                </div>
+            </div>
         </div>
 
         <!-- Tab 3: Raw Data -->
@@ -962,8 +1302,255 @@
 
         // Get all deals from loaded data
         let allDeals = [];
-        if (typeof dualViewData !== 'undefined') {
-            allDeals = dualViewData.propertyView || [];
+        let allDealsData = [];  // This will include unmapped deals
+        if (typeof dealsDataProperty !== 'undefined') {
+            allDeals = dealsDataProperty || [];
+        }
+        if (typeof window.allDealsData !== 'undefined') {
+            allDealsData = window.allDealsData || [];
+        }
+        
+        // Log status
+        console.log('Deals loaded:', {
+            mapped: allDeals.length,
+            total: allDealsData.length || allDeals.length,
+            unmapped: allDealsData.length ? allDealsData.filter(d => !d.hasLocation).length : 0
+        });
+
+        // Stage Filter State Management
+        let activeStages = new Set(['closed-won', 'contracting', 'decision', 'solution', 'discovery', 'evaluation']);
+        // Note: closed-lost starts inactive
+
+        // Stage mapping (HubSpot stage IDs to our stage keys)
+        const stageMapping = {
+            'closed-won': '239842175',
+            'contracting': '1294734116',
+            'decision': '1294734115',
+            'solution': '1294734113',
+            'discovery': '1294734112',
+            'evaluation': '1294734111',
+            'closed-lost': '239842176'
+        };
+
+        // Reverse mapping (stage name to key)
+        const stageNameToKey = {
+            'Closed Won': 'closed-won',
+            'Contracting': 'contracting',
+            'Decision & Approval': 'decision',
+            'Solution & Business Alignment': 'solution',
+            'Discovery & Stakeholders': 'discovery',
+            'Evaluation Accepted': 'evaluation',
+            'Closed Lost': 'closed-lost'
+        };
+
+        // Toggle stage filter
+        function toggleStageFilter(stageId) {
+            const chip = document.querySelector(`[data-stage="${stageId}"]`);
+            
+            if (activeStages.has(stageId)) {
+                activeStages.delete(stageId);
+                chip.classList.remove('active');
+            } else {
+                activeStages.add(stageId);
+                chip.classList.add('active');
+            }
+            
+            updateMapMarkers();
+            updateUnmappedList();
+            updateFilterSummary();
+        }
+
+        // Reset all filters
+        function resetStageFilters() {
+            activeStages = new Set(['closed-won', 'contracting', 'decision', 'solution', 'discovery', 'evaluation', 'closed-lost']);
+            
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.add('active');
+            });
+            
+            updateMapMarkers();
+            updateUnmappedList();
+            updateFilterSummary();
+        }
+
+        // Update map markers based on active filters
+        function updateMapMarkers() {
+            if (!window.markersLayer || !map) return 0;
+            
+            window.markersLayer.clearLayers();
+            
+            const filteredDeals = allDeals.filter(deal => {
+                const stageKey = stageNameToKey[deal.stage];
+                return stageKey && activeStages.has(stageKey);
+            });
+            
+            filteredDeals.forEach(deal => {
+                if (deal.lat && deal.lon) {
+                    const marker = L.marker([deal.lat, deal.lon]);
+                    marker.bindPopup(`
+                        <div style="font-family: Inter, sans-serif;">
+                            <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${deal.name}</div>
+                            <div style="font-size: 13px; color: #666;"><strong>Owner:</strong> ${deal.owner || 'Unknown'}</div>
+                            <div style="font-size: 13px; color: #666;"><strong>GBV:</strong> ${formatCurrency(deal.gbv || 0)}</div>
+                            <div style="font-size: 13px; color: #666;"><strong>Location:</strong> ${deal.city}, ${deal.state}</div>
+                            <div style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: ${deal.color || '#0d9488'}; color: white; font-size: 11px; font-weight: 600; display: inline-block;">${deal.stage}</div>
+                        </div>
+                    `);
+                    window.markersLayer.addLayer(marker);
+                }
+            });
+            
+            return filteredDeals.length;
+        }
+
+        // Get stage name for display
+        function getStageName(stageId) {
+            const reverseMapping = {
+                '239842175': 'Closed Won',
+                '1294734116': 'Contracting',
+                '1294734115': 'Decision & Approval',
+                '1294734113': 'Solution & Business Alignment',
+                '1294734112': 'Discovery & Stakeholders',
+                '1294734111': 'Evaluation Accepted',
+                '239842176': 'Closed Lost'
+            };
+            return reverseMapping[stageId] || 'Unknown';
+        }
+
+        // Update unmapped deals list
+        function updateUnmappedList() {
+            const tbody = document.getElementById('unmapped-tbody');
+            if (!tbody) return 0;
+            
+            tbody.innerHTML = '';
+            
+            // If allDealsData is available, use it
+            let unmappedDeals = [];
+            
+            if (allDealsData.length > 0) {
+                unmappedDeals = allDealsData.filter(deal => {
+                    // Find stage key from stage ID
+                    const stageKey = Object.keys(stageMapping).find(key => 
+                        stageMapping[key] === deal.dealstage
+                    );
+                    
+                    // Check if stage is active and deal has no location
+                    return stageKey && activeStages.has(stageKey) && !deal.hasLocation;
+                });
+            }
+            
+            if (unmappedDeals.length === 0) {
+                document.getElementById('unmapped-section').style.display = 'none';
+                return 0;
+            }
+            
+            document.getElementById('unmapped-section').style.display = 'block';
+            
+            unmappedDeals.forEach(deal => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${deal.dealname || 'Unnamed Deal'}</strong></td>
+                    <td><span class="stage-badge">${deal.stageName || getStageName(deal.dealstage)}</span></td>
+                    <td>${deal.owner || 'Unknown'}</td>
+                    <td><strong>${formatCurrency(parseFloat(deal.gbv__rollup_ || 0))}</strong></td>
+                    <td>${deal.companyName || 'Unknown'}</td>
+                    <td>
+                        <a href="https://app.hubspot.com/contacts/44645317/record/0-3/${deal.hs_object_id}" 
+                           target="_blank" class="hubspot-link">
+                            🔗 Add Address
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Update stats
+            const totalGBV = unmappedDeals.reduce((sum, d) => sum + parseFloat(d.gbv__rollup_ || 0), 0);
+            document.getElementById('unmapped-total').textContent = unmappedDeals.length;
+            document.getElementById('unmapped-gbv').textContent = formatCurrency(totalGBV);
+            
+            return unmappedDeals.length;
+        }
+
+        // Update filter summary counts
+        function updateFilterSummary() {
+            const mappedCount = updateMapMarkers();
+            const unmappedCount = updateUnmappedList();
+            const totalVisible = mappedCount + unmappedCount;
+            
+            // Calculate total deals per stage
+            const stageCounts = {};
+            
+            // Count mapped deals
+            allDeals.forEach(deal => {
+                const stageKey = stageNameToKey[deal.stage];
+                if (stageKey) {
+                    stageCounts[stageKey] = (stageCounts[stageKey] || 0) + 1;
+                }
+            });
+            
+            // Count unmapped deals
+            if (allDealsData.length > 0) {
+                allDealsData.forEach(deal => {
+                    if (!deal.hasLocation) {
+                        const stageKey = Object.keys(stageMapping).find(key => 
+                            stageMapping[key] === deal.dealstage
+                        );
+                        if (stageKey) {
+                            stageCounts[stageKey] = (stageCounts[stageKey] || 0) + 1;
+                        }
+                    }
+                });
+            }
+            
+            // Update chip counts
+            Object.keys(stageCounts).forEach(stageKey => {
+                const countElement = document.getElementById(`count-${stageKey}`);
+                if (countElement) {
+                    countElement.textContent = `(${stageCounts[stageKey]})`;
+                }
+            });
+            
+            // Update summary
+            const totalDeals = Object.values(stageCounts).reduce((sum, count) => sum + count, 0);
+            document.getElementById('visible-count').textContent = totalVisible;
+            document.getElementById('total-count').textContent = totalDeals;
+            document.getElementById('mapped-count').textContent = mappedCount;
+            document.getElementById('unmapped-count').textContent = unmappedCount;
+        }
+
+        // Export unmapped deals to CSV
+        function exportUnmappedDeals() {
+            let unmappedDeals = [];
+            
+            if (allDealsData.length > 0) {
+                unmappedDeals = allDealsData.filter(deal => !deal.hasLocation);
+            }
+            
+            if (unmappedDeals.length === 0) {
+                alert('No unmapped deals to export');
+                return;
+            }
+            
+            const csv = [
+                ['Deal Name', 'Stage', 'Owner', 'GBV', 'Company', 'HubSpot URL'],
+                ...unmappedDeals.map(deal => [
+                    deal.dealname || '',
+                    deal.stageName || getStageName(deal.dealstage),
+                    deal.owner || '',
+                    deal.gbv__rollup_ || 0,
+                    deal.companyName || '',
+                    `https://app.hubspot.com/contacts/44645317/record/0-3/${deal.hs_object_id}`
+                ])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `unmapped-deals-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         // Helper function to format currency
@@ -1151,6 +1738,7 @@
 
         // Map initialization
         let map;
+        window.markersLayer = null;
 
         function initMap() {
             if (map) return;
@@ -1162,25 +1750,14 @@
                 maxZoom: 19
             }).addTo(map);
             
-            const markers = L.markerClusterGroup();
+            // Create markers layer group
+            window.markersLayer = L.markerClusterGroup();
+            map.addLayer(window.markersLayer);
             
-            allDeals.forEach(deal => {
-                if (deal.lat && deal.lng) {
-                    const marker = L.marker([deal.lat, deal.lng]);
-                    marker.bindPopup(`
-                        <div style="font-family: Inter, sans-serif;">
-                            <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${deal.name}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>Owner:</strong> ${deal.owner || 'Unknown'}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>GBV:</strong> ${formatCurrency(deal.gbv || 0)}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>Location:</strong> ${deal.city}, ${deal.state}</div>
-                            <div style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: ${deal.color || '#0d9488'}; color: white; font-size: 11px; font-weight: 600; display: inline-block;">${deal.stage}</div>
-                        </div>
-                    `);
-                    markers.addLayer(marker);
-                }
-            });
-            
-            map.addLayer(markers);
+            // Initial population
+            updateMapMarkers();
+            updateUnmappedList();
+            updateFilterSummary();
         }
     </script>
 </body>
