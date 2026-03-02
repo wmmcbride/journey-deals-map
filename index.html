@@ -230,24 +230,77 @@
             border: 2px solid var(--border);
             border-radius: 20px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease; /* Longer, more noticeable */
             font-size: 14px;
             font-weight: 500;
+            user-select: none; /* Prevent text selection */
+            position: relative; /* For ripple effect */
+            overflow: hidden;
         }
 
         .filter-chip:hover {
             border-color: var(--teal);
-            background: rgba(13, 148, 136, 0.05);
+            background: rgba(13, 148, 136, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
         }
 
+        .filter-chip:active {
+            transform: translateY(0);
+            transition: all 0.1s ease;
+        }
+
+        /* INACTIVE state (explicitly NOT active) */
+        .filter-chip:not(.active) {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #9ca3af;
+            opacity: 0.6;
+        }
+
+        .filter-chip:not(.active):hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+            opacity: 0.8;
+        }
+
+        /* ACTIVE state (explicitly active) */
         .filter-chip.active {
             background: var(--teal);
             border-color: var(--teal);
             color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
         }
 
-        .filter-chip.active .chip-icon {
+        .filter-chip.active:hover {
+            background: #0f766e;
+            border-color: #0f766e;
+            transform: translateY(-2px);
+        }
+
+        .filter-chip.active .chip-icon,
+        .filter-chip.active .chip-count {
             filter: brightness(0) invert(1);
+        }
+
+        /* Add ripple effect on click */
+        .filter-chip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .filter-chip:active::after {
+            width: 200px;
+            height: 200px;
         }
 
         .chip-count {
@@ -556,6 +609,31 @@
             font-size: 20px; 
             font-weight: 700; 
             color: var(--teal); 
+        }
+
+        /* Stage badges for pipeline position */
+        .stage-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            color: var(--charcoal);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stage-card.closed-won .stage-badge,
+        .stage-card.closed-lost .stage-badge {
+            background: rgba(0, 0, 0, 0.1);
+            font-weight: 800;
+        }
+
+        .stage-card {
+            position: relative; /* Enable absolute positioning for badge */
         }
 
         /* Modal Styles */
@@ -1005,11 +1083,12 @@
 
             <section id="pipeline-breakdown">
                 <h2>Pipeline Breakdown</h2>
-                <p class="section-subtitle">Click any stage to see deals</p>
+                <p class="section-subtitle">Click any stage to see deals (ordered by pipeline progression)</p>
                 
                 <div class="pipeline-grid">
-                    <!-- Closed Won -->
-                    <div class="stage-card clickable" data-stage="closed-won" onclick="showStageDeals('closed-won')">
+                    <!-- 1. CLOSED WON (top) -->
+                    <div class="stage-card clickable closed-won" data-stage="closed-won" onclick="showStageDeals('closed-won')">
+                        <div class="stage-badge">CLOSED</div>
                         <div class="stage-header">
                             <div class="stage-name">✅ Closed Won</div>
                             <div class="stage-icon">→</div>
@@ -1018,8 +1097,9 @@
                         <div class="stage-count">76 deals</div>
                     </div>
                     
-                    <!-- Active Stages -->
+                    <!-- 2. CONTRACTING -->
                     <div class="stage-card clickable" data-stage="contracting" onclick="showStageDeals('contracting')">
+                        <div class="stage-badge">STAGE 5</div>
                         <div class="stage-header">
                             <div class="stage-name">📝 Contracting</div>
                             <div class="stage-icon">→</div>
@@ -1028,7 +1108,9 @@
                         <div class="stage-count">9 deals</div>
                     </div>
                     
+                    <!-- 3. DECISION & APPROVAL -->
                     <div class="stage-card clickable" data-stage="decision" onclick="showStageDeals('decision')">
+                        <div class="stage-badge">STAGE 4</div>
                         <div class="stage-header">
                             <div class="stage-name">🤝 Decision & Approval</div>
                             <div class="stage-icon">→</div>
@@ -1037,7 +1119,9 @@
                         <div class="stage-count">1 deal</div>
                     </div>
                     
+                    <!-- 4. SOLUTION & BUSINESS ALIGNMENT -->
                     <div class="stage-card clickable" data-stage="solution" onclick="showStageDeals('solution')">
+                        <div class="stage-badge">STAGE 3</div>
                         <div class="stage-header">
                             <div class="stage-name">💡 Solution & Business Alignment</div>
                             <div class="stage-icon">→</div>
@@ -1046,7 +1130,9 @@
                         <div class="stage-count">2 deals</div>
                     </div>
                     
+                    <!-- 5. DISCOVERY & STAKEHOLDERS -->
                     <div class="stage-card clickable" data-stage="discovery" onclick="showStageDeals('discovery')">
+                        <div class="stage-badge">STAGE 2</div>
                         <div class="stage-header">
                             <div class="stage-name">🔍 Discovery & Stakeholders</div>
                             <div class="stage-icon">→</div>
@@ -1055,7 +1141,9 @@
                         <div class="stage-count">6 deals</div>
                     </div>
                     
+                    <!-- 6. EVALUATION ACCEPTED -->
                     <div class="stage-card clickable" data-stage="evaluation" onclick="showStageDeals('evaluation')">
+                        <div class="stage-badge">STAGE 1</div>
                         <div class="stage-header">
                             <div class="stage-name">📊 Evaluation Accepted</div>
                             <div class="stage-icon">→</div>
@@ -1064,8 +1152,9 @@
                         <div class="stage-count">9 deals</div>
                     </div>
                     
-                    <!-- Closed Lost -->
-                    <div class="stage-card clickable lost" data-stage="closed-lost" onclick="showStageDeals('closed-lost')">
+                    <!-- 7. CLOSED LOST (bottom) -->
+                    <div class="stage-card clickable closed-lost lost" data-stage="closed-lost" onclick="showStageDeals('closed-lost')">
+                        <div class="stage-badge">CLOSED</div>
                         <div class="stage-header">
                             <div class="stage-name">❌ Closed Lost</div>
                             <div class="stage-icon">→</div>
@@ -1128,6 +1217,50 @@
                         <span class="chip-label">Closed Lost</span>
                         <span class="chip-count" id="count-closed-lost">(0)</span>
                     </button>
+                </div>
+                
+                <!-- NEW: Owner Filters -->
+                <div class="filter-section" style="margin-top: 20px;">
+                    <div class="filter-header">
+                        <h3>Filter by Owner</h3>
+                        <button class="btn-clear-filters" onclick="resetOwnerFilters()">Show All Owners</button>
+                    </div>
+                    <div class="filter-chips">
+                        <button class="filter-chip owner-chip active" data-owner="zach" onclick="toggleOwnerFilter('zach')">
+                            <span class="chip-label">Zach Busekrus</span>
+                            <span class="chip-count" id="count-owner-zach">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="adam" onclick="toggleOwnerFilter('adam')">
+                            <span class="chip-label">Adam Terrell</span>
+                            <span class="chip-count" id="count-owner-adam">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="cameron" onclick="toggleOwnerFilter('cameron')">
+                            <span class="chip-label">Cameron DeJean</span>
+                            <span class="chip-count" id="count-owner-cameron">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="john" onclick="toggleOwnerFilter('john')">
+                            <span class="chip-label">John Sutton</span>
+                            <span class="chip-count" id="count-owner-john">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="andrew" onclick="toggleOwnerFilter('andrew')">
+                            <span class="chip-label">Andrew Collins</span>
+                            <span class="chip-count" id="count-owner-andrew">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="carolyn" onclick="toggleOwnerFilter('carolyn')">
+                            <span class="chip-label">Carolyn Schneider</span>
+                            <span class="chip-count" id="count-owner-carolyn">(0)</span>
+                        </button>
+                        
+                        <button class="filter-chip owner-chip active" data-owner="unknown" onclick="toggleOwnerFilter('unknown')">
+                            <span class="chip-label">Unattributed</span>
+                            <span class="chip-count" id="count-owner-unknown">(0)</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="filter-summary">
@@ -1321,6 +1454,36 @@
         let activeStages = new Set(['closed-won', 'contracting', 'decision', 'solution', 'discovery', 'evaluation']);
         // Note: closed-lost starts inactive
 
+        // Owner filters
+        let activeOwners = new Set(['zach', 'adam', 'cameron', 'john', 'andrew', 'carolyn', 'unknown']);
+        
+        // Owner name mapping (for filtering)
+        const ownerMapping = {
+            'zach': 'Zach Busekrus',
+            'adam': 'Adam Terrell',
+            'cameron': 'Cameron DeJean',
+            'john': 'John Sutton',
+            'andrew': 'Andrew Collins',
+            'carolyn': 'Carolyn Schneider',
+            'unknown': null
+        };
+        
+        // Helper function to get owner key from owner name
+        function getOwnerKey(ownerName) {
+            if (!ownerName || ownerName === 'Unknown') return 'unknown';
+            
+            for (const [key, name] of Object.entries(ownerMapping)) {
+                if (name && ownerName.includes(name)) return key;
+                if (ownerName.includes('644935943')) return 'andrew'; // Handle ID-based names
+                if (ownerName.includes('2085364329')) return 'carolyn';
+                if (ownerName.includes('2085364331')) return 'zach';
+                if (ownerName.includes('2085364340')) return 'adam';
+                if (ownerName.includes('1173849781')) return 'cameron';
+                if (ownerName.includes('1163842742')) return 'john';
+            }
+            return 'unknown';
+        }
+
         // Stage mapping (HubSpot stage IDs to our stage keys)
         const stageMapping = {
             'closed-won': '239842175',
@@ -1348,12 +1511,57 @@
             const chip = document.querySelector(`[data-stage="${stageId}"]`);
             
             if (activeStages.has(stageId)) {
+                // Deactivate
                 activeStages.delete(stageId);
                 chip.classList.remove('active');
+                chip.setAttribute('aria-pressed', 'false');
             } else {
+                // Activate
                 activeStages.add(stageId);
                 chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
             }
+            
+            // Force reflow for animation
+            chip.offsetHeight;
+            
+            updateMapMarkers();
+            updateUnmappedList();
+            updateFilterSummary();
+        }
+        
+        // Toggle owner filter
+        function toggleOwnerFilter(ownerId) {
+            const chip = document.querySelector(`[data-owner="${ownerId}"]`);
+            
+            if (activeOwners.has(ownerId)) {
+                // Deactivate
+                activeOwners.delete(ownerId);
+                chip.classList.remove('active');
+                chip.setAttribute('aria-pressed', 'false');
+            } else {
+                // Activate
+                activeOwners.add(ownerId);
+                chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
+            }
+            
+            // Force reflow for animation
+            chip.offsetHeight;
+            
+            updateMapMarkers();
+            updateUnmappedList();
+            updateFilterSummary();
+        }
+        
+        // Reset owner filters
+        function resetOwnerFilters() {
+            activeOwners = new Set(['zach', 'adam', 'cameron', 'john', 'andrew', 'carolyn', 'unknown']);
+            
+            document.querySelectorAll('.owner-chip').forEach(chip => {
+                chip.classList.add('active');
+                chip.setAttribute('aria-pressed', 'true');
+            });
             
             updateMapMarkers();
             updateUnmappedList();
@@ -1380,8 +1588,16 @@
             window.markersLayer.clearLayers();
             
             const filteredDeals = allDeals.filter(deal => {
+                // Check stage filter
                 const stageKey = stageNameToKey[deal.stage];
-                return stageKey && activeStages.has(stageKey);
+                const stageMatch = stageKey && activeStages.has(stageKey);
+                
+                // Check owner filter
+                const ownerKey = getOwnerKey(deal.owner);
+                const ownerMatch = activeOwners.has(ownerKey);
+                
+                // Both must match (AND logic)
+                return stageMatch && ownerMatch;
             });
             
             filteredDeals.forEach(deal => {
@@ -1511,6 +1727,33 @@
                 }
             });
             
+            // Count and update owner chip counts
+            const ownerCounts = {};
+            
+            // Count mapped deals by owner
+            allDeals.forEach(deal => {
+                const ownerKey = getOwnerKey(deal.owner);
+                ownerCounts[ownerKey] = (ownerCounts[ownerKey] || 0) + 1;
+            });
+            
+            // Count unmapped deals by owner
+            if (allDealsData.length > 0) {
+                allDealsData.forEach(deal => {
+                    if (!deal.hasLocation) {
+                        const ownerKey = getOwnerKey(deal.owner);
+                        ownerCounts[ownerKey] = (ownerCounts[ownerKey] || 0) + 1;
+                    }
+                });
+            }
+            
+            // Update owner chip counts
+            Object.keys(ownerCounts).forEach(ownerKey => {
+                const countElement = document.getElementById(`count-owner-${ownerKey}`);
+                if (countElement) {
+                    countElement.textContent = `(${ownerCounts[ownerKey]})`;
+                }
+            });
+            
             // Update summary
             const totalDeals = Object.values(stageCounts).reduce((sum, count) => sum + count, 0);
             document.getElementById('visible-count').textContent = totalVisible;
@@ -1572,8 +1815,23 @@
 
         // Show Stage Deals Modal
         function showStageDeals(stageId) {
-            // Stage mapping
-            const stageMap = {
+            console.group(`Loading stage: ${stageId}`);
+            console.log(`Total deals in allDeals: ${allDeals.length}`);
+            console.log(`Total deals in allDealsData: ${allDealsData.length}`);
+            
+            // Stage mapping (keys to HubSpot stage IDs)
+            const stageIdMap = {
+                'closed-won': '239842175',
+                'contracting': '1294734116',
+                'decision': '1294734115',
+                'solution': '1294734113',
+                'discovery': '1294734112',
+                'evaluation': '1294734111',
+                'closed-lost': '239842176'
+            };
+            
+            // Stage name mapping
+            const stageNameMap = {
                 'closed-won': 'Closed Won',
                 'contracting': 'Contracting',
                 'decision': 'Decision & Approval',
@@ -1583,13 +1841,35 @@
                 'closed-lost': 'Closed Lost'
             };
             
-            const stageName = stageMap[stageId];
+            const targetStageId = stageIdMap[stageId];
+            const stageName = stageNameMap[stageId];
             
-            // Filter deals by stage
-            const stageDeals = allDeals.filter(deal => deal.stage === stageName);
+            console.log(`Looking for stage ID: ${targetStageId} (${stageName})`);
+            
+            // Use allDealsData if available (includes all deals), otherwise fall back to allDeals
+            let dealSource = allDealsData.length > 0 ? allDealsData : allDeals;
+            
+            // Filter deals by stage - check both mapped and unmapped deals
+            let stageDeals = [];
+            
+            if (allDealsData.length > 0) {
+                // Use allDealsData which has both mapped and unmapped deals
+                stageDeals = allDealsData.filter(deal => {
+                    return deal.dealstage === targetStageId;
+                });
+            } else {
+                // Fall back to allDeals (mapped only)
+                stageDeals = allDeals.filter(deal => deal.stage === stageName);
+            }
+            
+            console.log(`Found ${stageDeals.length} deals for stage ${stageId}`);
+            console.groupEnd();
             
             // Calculate totals
-            const totalGBV = stageDeals.reduce((sum, deal) => sum + (deal.gbv || 0), 0);
+            const totalGBV = stageDeals.reduce((sum, deal) => {
+                const gbv = deal.gbv__rollup_ || deal.gbv || 0;
+                return sum + parseFloat(gbv);
+            }, 0);
             
             // Stage name mapping with icons
             const stageNames = {
@@ -1614,27 +1894,38 @@
             if (stageDeals.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #6b7280;">No deals in this stage</td></tr>';
             } else {
-                // Sort by GBV descending
-                stageDeals.sort((a, b) => (b.gbv || 0) - (a.gbv || 0));
+                // Sort by GBV descending (largest deals first)
+                stageDeals.sort((a, b) => {
+                    const gbvA = parseFloat(a.gbv__rollup_ || a.gbv || 0);
+                    const gbvB = parseFloat(b.gbv__rollup_ || b.gbv || 0);
+                    return gbvB - gbvA;
+                });
                 
                 stageDeals.forEach(deal => {
                     const row = document.createElement('tr');
                     
+                    // Get deal properties (handle both allDealsData and allDeals formats)
+                    const dealName = deal.dealname || deal.name || 'Unnamed Deal';
+                    const dealOwner = deal.owner || 'Unknown';
+                    const dealGBV = parseFloat(deal.gbv__rollup_ || deal.gbv || 0);
+                    const dealId = deal.hs_object_id || deal.id;
+                    
                     // Calculate days in stage (if date available)
                     let daysInStage = '-';
-                    if (deal.closeDate) {
-                        const dateMoved = new Date(deal.closeDate);
+                    const closeDate = deal.closedate || deal.closeDate;
+                    if (closeDate) {
+                        const dateMoved = new Date(closeDate);
                         const daysSince = Math.floor((Date.now() - dateMoved.getTime()) / (1000 * 60 * 60 * 24));
                         daysInStage = daysSince + ' days';
                     }
                     
                     // HubSpot deal URL
-                    const hubspotUrl = `https://app.hubspot.com/contacts/${HUBSPOT_PORTAL_ID}/record/0-3/${deal.id}`;
+                    const hubspotUrl = `https://app.hubspot.com/contacts/${HUBSPOT_PORTAL_ID}/record/0-3/${dealId}`;
                     
                     row.innerHTML = `
-                        <td><strong>${deal.name}</strong></td>
-                        <td>${deal.owner || 'Unknown'}</td>
-                        <td><strong>${formatCurrency(deal.gbv || 0)}</strong></td>
+                        <td><strong>${dealName}</strong></td>
+                        <td>${dealOwner}</td>
+                        <td><strong>${formatCurrency(dealGBV)}</strong></td>
                         <td>${daysInStage}</td>
                         <td>
                             <a href="${hubspotUrl}" target="_blank" class="hubspot-link" title="Open in HubSpot">
