@@ -23,7 +23,6 @@
             --white: #ffffff;
             --border: #e5e7eb;
             --green: #10b981;
-            --red: #ef4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -112,13 +111,6 @@
         }
 
         h2 { font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 20px; }
-
-        .section-subtitle {
-            font-size: 14px;
-            color: var(--charcoal);
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
 
         .metrics-grid {
             display: grid;
@@ -278,10 +270,9 @@
             font-weight: 600;
         }
 
-        /* Pipeline Breakdown - Enhanced with Clickable Cards */
-        .pipeline-grid {
+        .stage-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-top: 24px;
         }
@@ -291,207 +282,11 @@
             border-radius: 8px;
             padding: 20px;
             border-left: 4px solid var(--teal);
-            transition: all 0.2s;
         }
 
-        .stage-card.clickable {
-            cursor: pointer;
-        }
-
-        .stage-card.clickable:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.2);
-        }
-
-        .stage-card.lost {
-            border-left: 4px solid var(--red);
-        }
-
-        .stage-card.lost .stage-value {
-            color: var(--red);
-        }
-
-        .stage-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .stage-name { 
-            font-weight: 600; 
-            color: var(--navy); 
-            font-size: 14px;
-        }
-
-        .stage-icon {
-            font-size: 20px;
-            color: var(--teal);
-            transition: transform 0.2s;
-        }
-
-        .stage-card.clickable:hover .stage-icon {
-            transform: translateX(4px);
-        }
-
-        .stage-count { 
-            font-size: 12px; 
-            color: #6b7280; 
-            margin-bottom: 4px; 
-        }
-
-        .stage-value { 
-            font-size: 20px; 
-            font-weight: 700; 
-            color: var(--teal); 
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s;
-        }
-
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 1000px;
-            width: 90%;
-            max-height: 80vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s;
-        }
-
-        .modal-header {
-            padding: 24px;
-            border-bottom: 2px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--light-gray);
-        }
-
-        .modal-header h3 {
-            margin: 0;
-            color: var(--navy);
-            font-size: 24px;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 32px;
-            color: var(--charcoal);
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.2s;
-            line-height: 1;
-        }
-
-        .modal-close:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            max-height: calc(80vh - 100px);
-        }
-
-        .modal-stats {
-            display: flex;
-            gap: 32px;
-            margin-bottom: 24px;
-            padding: 16px;
-            background: var(--light-gray);
-            border-radius: 8px;
-        }
-
-        .stat {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--charcoal);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--navy);
-        }
-
-        .deals-detail-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .deals-detail-table th {
-            text-align: left;
-            padding: 12px;
-            background: var(--navy);
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .deals-detail-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-        }
-
-        .deals-detail-table tr:hover {
-            background: var(--light-gray);
-        }
-
-        .hubspot-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--teal);
-            text-decoration: none;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-
-        .hubspot-link:hover {
-            background: var(--light-gray);
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(40px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        .stage-name { font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+        .stage-count { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+        .stage-value { font-size: 20px; font-weight: 700; color: var(--teal); }
 
         .footnote {
             font-size: 12px;
@@ -651,36 +446,13 @@
             }
 
             /* Stage grid on mobile */
-            .pipeline-grid {
+            .stage-grid {
                 grid-template-columns: 1fr;
             }
 
             /* Adjust main content height for mobile tabs */
             main {
                 height: calc(100vh - 180px);
-            }
-
-            /* Mobile modal */
-            .modal-content {
-                width: 100%;
-                max-width: 100%;
-                height: 100%;
-                max-height: 100%;
-                border-radius: 0;
-            }
-            
-            .modal-stats {
-                flex-direction: column;
-                gap: 16px;
-            }
-            
-            .deals-detail-table {
-                font-size: 12px;
-            }
-            
-            .deals-detail-table th,
-            .deals-detail-table td {
-                padding: 8px 4px;
             }
         }
 
@@ -761,75 +533,25 @@
                 </div>
             </section>
 
-            <section id="pipeline-breakdown">
+            <section>
                 <h2>Pipeline Breakdown</h2>
-                <p class="section-subtitle">Click any stage to see deals</p>
                 
-                <div class="pipeline-grid">
-                    <!-- Closed Won -->
-                    <div class="stage-card clickable" data-stage="closed-won" onclick="showStageDeals('closed-won')">
-                        <div class="stage-header">
-                            <div class="stage-name">✅ Closed Won</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$378.7M</div>
-                        <div class="stage-count">76 deals</div>
+                <h3 style="font-size: 18px; font-weight: 600; color: var(--charcoal); margin-bottom: 16px;">Active Pipeline by Stage</h3>
+                <div class="stage-grid">
+                    <div class="stage-card">
+                        <div class="stage-name">Contracting</div>
+                        <div class="stage-count">5 deals</div>
+                        <div class="stage-value">$41.5M</div>
                     </div>
-                    
-                    <!-- Active Stages -->
-                    <div class="stage-card clickable" data-stage="contracting" onclick="showStageDeals('contracting')">
-                        <div class="stage-header">
-                            <div class="stage-name">📝 Contracting</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$90.3M</div>
-                        <div class="stage-count">9 deals</div>
-                    </div>
-                    
-                    <div class="stage-card clickable" data-stage="decision" onclick="showStageDeals('decision')">
-                        <div class="stage-header">
-                            <div class="stage-name">🤝 Decision & Approval</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$0.3M</div>
-                        <div class="stage-count">1 deal</div>
-                    </div>
-                    
-                    <div class="stage-card clickable" data-stage="solution" onclick="showStageDeals('solution')">
-                        <div class="stage-header">
-                            <div class="stage-name">💡 Solution & Business Alignment</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$13.0M</div>
+                    <div class="stage-card">
+                        <div class="stage-name">Discovery & Stakeholders</div>
                         <div class="stage-count">2 deals</div>
+                        <div class="stage-value">$125.0M</div>
                     </div>
-                    
-                    <div class="stage-card clickable" data-stage="discovery" onclick="showStageDeals('discovery')">
-                        <div class="stage-header">
-                            <div class="stage-name">🔍 Discovery & Stakeholders</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$279.6M</div>
-                        <div class="stage-count">6 deals</div>
-                    </div>
-                    
-                    <div class="stage-card clickable" data-stage="evaluation" onclick="showStageDeals('evaluation')">
-                        <div class="stage-header">
-                            <div class="stage-name">📊 Evaluation Accepted</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$82.8M</div>
-                        <div class="stage-count">9 deals</div>
-                    </div>
-                    
-                    <!-- Closed Lost -->
-                    <div class="stage-card clickable lost" data-stage="closed-lost" onclick="showStageDeals('closed-lost')">
-                        <div class="stage-header">
-                            <div class="stage-name">❌ Closed Lost</div>
-                            <div class="stage-icon">→</div>
-                        </div>
-                        <div class="stage-value">$2,387.5M</div>
-                        <div class="stage-count">252 deals</div>
+                    <div class="stage-card">
+                        <div class="stage-name">Evaluation Accepted</div>
+                        <div class="stage-count">20 deals</div>
+                        <div class="stage-value">$299.5M</div>
                     </div>
                 </div>
             </section>
@@ -894,54 +616,11 @@
         </div>
     </main>
 
-    <!-- Modal for Stage Deals -->
-    <div id="stageModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalStageName">Stage Name</h3>
-                <button class="modal-close" onclick="closeStageModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-stats">
-                    <div class="stat">
-                        <span class="stat-label">Total GBV:</span>
-                        <span class="stat-value" id="modalTotalGBV">$0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">Deal Count:</span>
-                        <span class="stat-value" id="modalDealCount">0</span>
-                    </div>
-                </div>
-                
-                <table class="deals-detail-table">
-                    <thead>
-                        <tr>
-                            <th>Deal Name</th>
-                            <th>Owner</th>
-                            <th>GBV</th>
-                            <th>Days in Stage</th>
-                            <th>Link</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modalDealsBody">
-                        <!-- Populated dynamically -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
     <!-- Leaflet + Dependencies -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    
-    <!-- Load Deals Data -->
-    <script src="deals-data-dual.js"></script>
 
     <script>
-        // HubSpot Portal ID (Journey Rewards)
-        const HUBSPOT_PORTAL_ID = '44645317';
-
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -960,139 +639,32 @@
             });
         });
 
-        // Get all deals from loaded data
-        let allDeals = [];
-        if (typeof dualViewData !== 'undefined') {
-            allDeals = dualViewData.propertyView || [];
-        }
+        // Deals data from map files
+        const ALL_DEALS = [
+            {"id":"22362957576","name":"Flohom","stage":"Closed Won","owner":"Adam Terrell","gbv":1026562.5,"lat":38.7848323,"lng":-77.0167864,"city":"National Harbor","state":"MD","country":"US"},
+            {"id":"22365778484","name":"The Annex","stage":"Closed Won","owner":"Adam Terrell","gbv":1314000,"lat":43.6655051,"lng":-79.4074904,"city":"Toronto","state":"Ontario","country":"Canada"},
+            {"id":"22375288865","name":"Dawn Ranch","stage":"Contracting","owner":"John Sutton","gbv":7062750,"lat":38.5106687,"lng":-122.9664838,"city":"Guerneville","state":"CA","country":"United States"},
+            {"id":"28619861346","name":"Abode Luxury Rentals","stage":"Closed Won","owner":"Adam Terrell","gbv":27375000,"lat":43.479965,"lng":-110.761815,"city":"Jackson","state":"WY","country":"United States"},
+            {"id":"28632249443","name":"Fieldtrip","stage":"Closed Won","owner":"Zach Busekrus","gbv":9050175,"lat":34.0536909,"lng":-118.242766,"city":"Los Angeles","state":"CA","country":"United States"},
+            {"id":"29857449749","name":"Lokal Hotels","stage":"Closed Won","owner":"Zach Busekrus","gbv":394200,"lat":39.950781722270776,"lng":-75.14851361796956,"city":"Philadelphia","state":"PA","country":"United States"},
+            {"id":"35028448916","name":"Castle Hill Inn","stage":"Closed Won","owner":"Cameron DeJean","gbv":12647250,"lat":41.464068,"lng":-71.3607727,"city":"Newport","state":"RI","country":"United States"},
+            {"id":"42657509632","name":"Stay Awhile Villas","stage":"Closed Won","owner":"Adam Terrell","gbv":19710000,"lat":34.0715497,"lng":-118.403005,"city":"Beverly Hills","state":"CA","country":"US"},
+            {"id":"45144580420","name":"Estancia La Jolla","stage":"Contracting","owner":"Cameron DeJean","gbv":22075200,"lat":32.8848762,"lng":-117.2448553,"city":"San Diego","state":"California","country":"United States"},
+            {"id":"54616045401","name":"Baillie Lodges","stage":"Discovery & Stakeholders","owner":"Cameron DeJean","gbv":119355000,"lat":-33.638049,"lng":151.3277989,"city":"Sydney","state":"New South Wales","country":"Australia"}
+        ];
 
-        // Helper function to format currency
-        function formatCurrency(value) {
-            if (value >= 1000000) {
-                return '$' + (value / 1000000).toFixed(1) + 'M';
-            } else if (value >= 1000) {
-                return '$' + (value / 1000).toFixed(1) + 'K';
-            }
-            return '$' + value.toFixed(0);
-        }
-
-        // Helper function to get owner name from ID
-        function getOwnerName(ownerId) {
-            // This is a simplified version - you may need to add a proper owner mapping
-            const deal = allDeals.find(d => d.owner);
-            return deal ? deal.owner : 'Unknown';
-        }
-
-        // Show Stage Deals Modal
-        function showStageDeals(stageId) {
-            // Stage mapping
-            const stageMap = {
-                'closed-won': 'Closed Won',
-                'contracting': 'Contracting',
-                'decision': 'Decision & Approval',
-                'solution': 'Solution & Business Alignment',
-                'discovery': 'Discovery & Stakeholders',
-                'evaluation': 'Evaluation Accepted',
-                'closed-lost': 'Closed Lost'
-            };
-            
-            const stageName = stageMap[stageId];
-            
-            // Filter deals by stage
-            const stageDeals = allDeals.filter(deal => deal.stage === stageName);
-            
-            // Calculate totals
-            const totalGBV = stageDeals.reduce((sum, deal) => sum + (deal.gbv || 0), 0);
-            
-            // Stage name mapping with icons
-            const stageNames = {
-                'closed-won': '✅ Closed Won',
-                'contracting': '📝 Contracting',
-                'decision': '🤝 Decision & Approval',
-                'solution': '💡 Solution & Business Alignment',
-                'discovery': '🔍 Discovery & Stakeholders',
-                'evaluation': '📊 Evaluation Accepted',
-                'closed-lost': '❌ Closed Lost'
-            };
-            
-            // Update modal header
-            document.getElementById('modalStageName').textContent = stageNames[stageId];
-            document.getElementById('modalTotalGBV').textContent = formatCurrency(totalGBV);
-            document.getElementById('modalDealCount').textContent = stageDeals.length;
-            
-            // Populate deals table
-            const tbody = document.getElementById('modalDealsBody');
-            tbody.innerHTML = '';
-            
-            if (stageDeals.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #6b7280;">No deals in this stage</td></tr>';
-            } else {
-                // Sort by GBV descending
-                stageDeals.sort((a, b) => (b.gbv || 0) - (a.gbv || 0));
-                
-                stageDeals.forEach(deal => {
-                    const row = document.createElement('tr');
-                    
-                    // Calculate days in stage (if date available)
-                    let daysInStage = '-';
-                    if (deal.closeDate) {
-                        const dateMoved = new Date(deal.closeDate);
-                        const daysSince = Math.floor((Date.now() - dateMoved.getTime()) / (1000 * 60 * 60 * 24));
-                        daysInStage = daysSince + ' days';
-                    }
-                    
-                    // HubSpot deal URL
-                    const hubspotUrl = `https://app.hubspot.com/contacts/${HUBSPOT_PORTAL_ID}/record/0-3/${deal.id}`;
-                    
-                    row.innerHTML = `
-                        <td><strong>${deal.name}</strong></td>
-                        <td>${deal.owner || 'Unknown'}</td>
-                        <td><strong>${formatCurrency(deal.gbv || 0)}</strong></td>
-                        <td>${daysInStage}</td>
-                        <td>
-                            <a href="${hubspotUrl}" target="_blank" class="hubspot-link" title="Open in HubSpot">
-                                🔗 HubSpot
-                            </a>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
-            
-            // Show modal
-            document.getElementById('stageModal').classList.add('active');
-        }
-
-        function closeStageModal() {
-            document.getElementById('stageModal').classList.remove('active');
-        }
-
-        // Close modal on outside click
-        document.getElementById('stageModal').addEventListener('click', (e) => {
-            if (e.target.id === 'stageModal') {
-                closeStageModal();
-            }
-        });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeStageModal();
-            }
-        });
-
-        // Data Table Functions
+        // Data Table
         function applyDataFilters() {
             const stageFilter = document.getElementById('dataStageFilter').value;
             const ownerFilter = document.getElementById('dataOwnerFilter').value;
             const searchTerm = document.getElementById('dataSearchInput').value.toLowerCase();
 
-            let visible = allDeals.filter(deal => {
+            let visible = ALL_DEALS.filter(deal => {
                 const matchesStage = stageFilter === 'all' || deal.stage === stageFilter;
                 const matchesOwner = ownerFilter === 'all' || deal.owner === ownerFilter;
                 const matchesSearch = searchTerm === '' ||
                     deal.name.toLowerCase().includes(searchTerm) ||
-                    (deal.city && deal.city.toLowerCase().includes(searchTerm));
+                    deal.city.toLowerCase().includes(searchTerm);
                 
                 return matchesStage && matchesOwner && matchesSearch;
             });
@@ -1106,17 +678,16 @@
             tbody.innerHTML = deals.map(deal => `
                 <tr>
                     <td><strong>${deal.name}</strong></td>
-                    <td>${deal.owner || 'Unknown'}</td>
+                    <td>${deal.owner}</td>
                     <td>${deal.stage}</td>
-                    <td><strong style="color: var(--teal);">${formatCurrency(deal.gbv || 0)}</strong></td>
-                    <td>${deal.city ? deal.city + ', ' + deal.state : 'N/A'}</td>
+                    <td><strong style="color: var(--teal);">$${(deal.gbv / 1000000).toFixed(2)}M</strong></td>
+                    <td>${deal.city}, ${deal.state}</td>
                 </tr>
             `).join('');
         }
 
         function sortDataTable(column) {
             console.log('Sort by:', column);
-            // Implement sorting if needed
         }
 
         function clearDataFilters() {
@@ -1128,12 +699,11 @@
 
         function exportDataToCSV() {
             const csv = ['Deal Name,Owner,Stage,GBV,Location'];
-            allDeals.forEach(d => {
-                const location = d.city ? `${d.city}, ${d.state}` : 'N/A';
-                csv.push(`"${d.name}","${d.owner || 'Unknown'}","${d.stage}","${d.gbv || 0}","${location}"`);
+            ALL_DEALS.forEach(d => {
+                csv.push(`"${d.name}","${d.owner}","${d.stage}","${d.gbv}","${d.city}, ${d.state}"`);
             });
             
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const blob = new Blob([csv.join('\\n')], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1141,13 +711,11 @@
             a.click();
         }
 
-        // Initialize data table filters
-        if (allDeals.length > 0) {
-            document.getElementById('dataStageFilter').addEventListener('change', applyDataFilters);
-            document.getElementById('dataOwnerFilter').addEventListener('change', applyDataFilters);
-            document.getElementById('dataSearchInput').addEventListener('input', applyDataFilters);
-            applyDataFilters();
-        }
+        document.getElementById('dataStageFilter').addEventListener('change', applyDataFilters);
+        document.getElementById('dataOwnerFilter').addEventListener('change', applyDataFilters);
+        document.getElementById('dataSearchInput').addEventListener('input', applyDataFilters);
+        
+        applyDataFilters();
 
         // Map initialization
         let map;
@@ -1164,20 +732,18 @@
             
             const markers = L.markerClusterGroup();
             
-            allDeals.forEach(deal => {
-                if (deal.lat && deal.lng) {
-                    const marker = L.marker([deal.lat, deal.lng]);
-                    marker.bindPopup(`
-                        <div style="font-family: Inter, sans-serif;">
-                            <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${deal.name}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>Owner:</strong> ${deal.owner || 'Unknown'}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>GBV:</strong> ${formatCurrency(deal.gbv || 0)}</div>
-                            <div style="font-size: 13px; color: #666;"><strong>Location:</strong> ${deal.city}, ${deal.state}</div>
-                            <div style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: ${deal.color || '#0d9488'}; color: white; font-size: 11px; font-weight: 600; display: inline-block;">${deal.stage}</div>
-                        </div>
-                    `);
-                    markers.addLayer(marker);
-                }
+            ALL_DEALS.forEach(deal => {
+                const marker = L.marker([deal.lat, deal.lng]);
+                marker.bindPopup(`
+                    <div style="font-family: Inter, sans-serif;">
+                        <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${deal.name}</div>
+                        <div style="font-size: 13px; color: #666;"><strong>Owner:</strong> ${deal.owner}</div>
+                        <div style="font-size: 13px; color: #666;"><strong>GBV:</strong> $${(deal.gbv / 1000000).toFixed(2)}M</div>
+                        <div style="font-size: 13px; color: #666;"><strong>Location:</strong> ${deal.city}, ${deal.state}</div>
+                        <div style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: #0d9488; color: white; font-size: 11px; font-weight: 600; display: inline-block;">${deal.stage}</div>
+                    </div>
+                `);
+                markers.addLayer(marker);
             });
             
             map.addLayer(markers);
