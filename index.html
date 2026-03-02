@@ -2,223 +2,581 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Journey Alliance Deals Map</title>
+    <meta name="viewport"="width=device-width, initial-scale=1.0">
+    <title>Journey Alliance Command Center - March 2, 2026</title>
+    
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --navy: #1e3a8a;
+            --teal: #0d9488;
+            --charcoal: #374151;
+            --light-gray: #f3f4f6;
+            --white: #ffffff;
+            --border: #e5e7eb;
+            --green: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--charcoal);
+            background: var(--light-gray);
+            overflow: hidden;
+        }
+
+        .unified-header {
+            background: var(--white);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-content {
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .date { color: var(--charcoal); font-size: 14px; }
+
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            padding: 0 40px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--charcoal);
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover { color: var(--navy); background: var(--light-gray); }
+        .tab-btn.active { color: var(--navy); border-bottom-color: var(--teal); }
+
+        main { height: calc(100vh - 120px); overflow: hidden; }
+
+        .tab-content {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #tab-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 { font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 20px; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--white);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--teal);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--charcoal);
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 4px;
+        }
+
+        .metric-value.teal { color: var(--teal); }
+        .metric-value.green { color: var(--green); }
+
+        .metric-detail { font-size: 14px; color: #6b7280; }
+
+        #tab-map {
+            position: relative;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .table-container { overflow-x: auto; margin-top: 20px; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead { background: var(--light-gray); }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--navy);
+            border-bottom: 2px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table th:hover { background: #e5e7eb; }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tbody tr:hover { background: #fafafa; }
+
+        .filters {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--light-gray);
+            border-radius: 8px;
+        }
+
+        .filters select, .filters input {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: var(--white);
+            min-width: 200px;
+        }
+
+        .filters button {
+            padding: 10px 20px;
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filters button:hover {
+            background: var(--teal);
+            transform: translateY(-1px);
+        }
+
+        .progress-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .progress-percent {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--teal);
+        }
+
+        .progress-bar {
+            height: 32px;
+            background: var(--white);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--teal) 0%, var(--green) 100%);
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            color: var(--white);
+            font-weight: 600;
+        }
+
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stage-card {
+            background: var(--light-gray);
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid var(--teal);
+        }
+
+        .stage-name { font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+        .stage-count { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+        .stage-value { font-size: 20px; font-weight: 700; color: var(--teal); }
+
+        .footnote {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
 </head>
 <body>
-    <div id="map"></div>
-    
-    <div class="header">
+    <header class="unified-header">
         <div class="header-content">
-            <h1>Journey Alliance</h1>
-            <div class="subtitle" id="subtitle">103 Deals • $845M GBV</div>
+            <div>
+                <h1>🧭 Journey Alliance Command Center</h1>
+                <div class="date">Week of March 2, 2026</div>
+            </div>
         </div>
-        <div class="header-actions">
-            <div class="view-toggle-group">
-                <button id="propertyViewBtn" class="view-toggle-btn active">🏨 Property View</button>
-                <button id="hqViewBtn" class="view-toggle-btn">🏢 HQ View</button>
-            </div>
-            <button id="darkModeToggle" class="icon-btn" title="Toggle Dark Mode">🌙</button>
-            <button id="resetView" class="icon-btn" title="Reset View">🌍</button>
-        </div>
-    </div>
-    
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-toggle" id="sidebarToggle">
-            <span>◀</span>
-        </div>
-        
-        <div class="sidebar-content">
-            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search deals..." />
-            
-            <!-- Region Quick Filters -->
-            <div class="filter-section">
-                <h3>Quick Regions</h3>
-                <div class="region-buttons">
-                    <button class="region-btn" data-region="north-america">🇺🇸 North America</button>
-                    <button class="region-btn" data-region="europe">🇪🇺 Europe</button>
-                    <button class="region-btn" data-region="asia">🌏 Asia/Pacific</button>
-                    <button class="region-btn" data-region="latin-america">🌎 Latin America</button>
-                    <button class="region-btn" data-region="africa">🌍 Africa</button>
-                    <button class="region-btn active" data-region="all">🌐 All</button>
-                </div>
-            </div>
-            
-            <!-- Draw Tools -->
-            <div class="filter-section">
-                <h3>Custom Region</h3>
-                <div class="draw-tools">
-                    <button id="drawCircle" class="tool-btn">⭕ Draw Circle</button>
-                    <button id="drawPolygon" class="tool-btn">▢ Draw Polygon</button>
-                    <button id="clearDrawing" class="tool-btn secondary">✕ Clear</button>
-                </div>
-            </div>
-            
-            <!-- Basemap Selector -->
-            <div class="filter-section">
-                <h3>Map Style</h3>
-                <select id="basemapSelector" class="styled-select">
-                    <option value="light">Light (Default)</option>
-                    <option value="dark">Dark</option>
-                    <option value="satellite">Satellite</option>
-                    <option value="minimal">Minimal</option>
-                </select>
-            </div>
-            
-            <!-- Stage Filter -->
-            <div class="filter-section">
-                <h3>Deal Stage</h3>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Closed Won" checked>
-                    <span class="checkmark" style="background: #2e7d32;"></span>
-                    <span>Closed Won</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Contracting" checked>
-                    <span class="checkmark" style="background: #1565c0;"></span>
-                    <span>Contracting</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Decision & Approval" checked>
-                    <span class="checkmark" style="background: #1976d2;"></span>
-                    <span>Decision & Approval</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Solution & Business Alignment" checked>
-                    <span class="checkmark" style="background: #42a5f5;"></span>
-                    <span>Solution & Alignment</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Discovery & Stakeholders" checked>
-                    <span class="checkmark" style="background: #64b5f6;"></span>
-                    <span>Discovery</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" class="stage-filter" value="Evaluation Accepted" checked>
-                    <span class="checkmark" style="background: #90caf9;"></span>
-                    <span>Evaluation</span>
-                </label>
-            </div>
-            
-            <!-- Owner Filter -->
-            <div class="filter-section">
-                <h3>Deal Owner</h3>
-                <select id="ownerFilter" class="styled-select">
-                    <option value="all">All Owners</option>
-                    <option value="Cameron DeJean">Cameron DeJean</option>
-                    <option value="Adam Terrell">Adam Terrell</option>
-                    <option value="John Sutton">John Sutton</option>
-                    <option value="Zach Busekrus">Zach Busekrus</option>
-                    <option value="Andrew Collins">Andrew Collins</option>
-                    <option value="Carolyn Schneider">Carolyn Schneider</option>
-                </select>
-            </div>
-            
-            <!-- Stats -->
-            <div class="stats-box">
-                <h3>Visible Deals</h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="statGBV">$0</div>
-                        <div class="stat-label">Total GBV</div>
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="tab-btn" data-tab="map">🗺️ Map</button>
+            <button class="tab-btn" data-tab="data">📋 Raw Data</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Tab 1: Dashboard -->
+        <div id="tab-dashboard" class="tab-content active">
+            <section>
+                <h2>Executive Overview</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">CLOSED WON</div>
+                        <div class="metric-value">$378.7M</div>
+                        <div class="metric-detail">76 deals</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="statCount">0</div>
-                        <div class="stat-label">Deals</div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">ACTIVE PIPELINE</div>
+                        <div class="metric-value teal">$466.0M</div>
+                        <div class="metric-detail">27 deals</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="statProperties">0</div>
-                        <div class="stat-label">Properties</div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">TOTAL ADDRESSABLE</div>
+                        <div class="metric-value">$1.44B</div>
+                        <div class="metric-detail">Includes $600M Pebblebrook*</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="statKeys">0</div>
-                        <div class="stat-label">Keys</div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">WIN RATE</div>
+                        <div class="metric-value green">23%</div>
+                        <div class="metric-detail">76 won / 328 closed</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="legend" id="legend">
-        <h4>Deal Stages</h4>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #2e7d32;"></div>
-            <span>Closed Won</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #1565c0;"></div>
-            <span>Contracting</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #1976d2;"></div>
-            <span>Decision</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #42a5f5;"></div>
-            <span>Solution</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #64b5f6;"></div>
-            <span>Discovery</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #90caf9;"></div>
-            <span>Evaluation</span>
-        </div>
-    </div>
-    
-    <!-- Deal Context Modal -->
-    <div class="deal-context-modal" id="dealContextModal">
-        <div class="modal-backdrop" onclick="closeDealContext()"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalDealName">Deal Details</h2>
-                <button class="modal-close" onclick="closeDealContext()">✕</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <p>Loading deal context from HubSpot...</p>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span style="font-weight: 600; color: var(--navy); font-size: 16px;">Series A Milestone Progress</span>
+                        <span class="progress-percent">38%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 38%"></div>
+                    </div>
+                    <div style="font-size: 14px; color: #374151; font-weight: 500;">
+                        $378.7M / $1.0B Target (Closed Won GBV)
+                    </div>
                 </div>
-            </div>
+
+                <div class="footnote">
+                    * Total Addressable includes Closed Won ($378.7M) + Active Pipeline ($466.0M) + Pebblebrook expansion opportunity ($600M)
+                </div>
+            </section>
+
+            <section>
+                <h2>Pipeline Breakdown</h2>
+                
+                <h3 style="font-size: 18px; font-weight: 600; color: var(--charcoal); margin-bottom: 16px;">Active Pipeline by Stage</h3>
+                <div class="stage-grid">
+                    <div class="stage-card">
+                        <div class="stage-name">Contracting</div>
+                        <div class="stage-count">5 deals</div>
+                        <div class="stage-value">$41.5M</div>
+                    </div>
+                    <div class="stage-card">
+                        <div class="stage-name">Discovery & Stakeholders</div>
+                        <div class="stage-count">2 deals</div>
+                        <div class="stage-value">$125.0M</div>
+                    </div>
+                    <div class="stage-card">
+                        <div class="stage-name">Evaluation Accepted</div>
+                        <div class="stage-count">20 deals</div>
+                        <div class="stage-value">$299.5M</div>
+                    </div>
+                </div>
+            </section>
         </div>
-    </div>
-    
-    <!-- Deal List Panel (Toggle) -->
-    <button class="deal-list-toggle" id="dealListToggle">
-        📋 View Deal List
-    </button>
-    
-    <div class="deal-list-panel" id="dealListPanel">
-        <div class="deal-list-header">
-            <h3>Filtered Deals</h3>
-            <div class="deal-list-actions">
-                <button id="exportCSV" class="action-btn">📥 Export CSV</button>
-                <button id="closeDealList" class="action-btn close">✕</button>
-            </div>
+
+        <!-- Tab 2: Map -->
+        <div id="tab-map" class="tab-content">
+            <div id="map-container"></div>
         </div>
-        <div class="deal-list-controls">
-            <div class="deal-list-info">
-                <span>💡 Click any column header to sort</span>
-            </div>
+
+        <!-- Tab 3: Raw Data -->
+        <div id="tab-data" class="tab-content">
+            <section>
+                <h2>All Deals (103 with Geographic Data)</h2>
+                
+                <div class="filters">
+                    <select id="dataStageFilter">
+                        <option value="all">All Stages</option>
+                        <option value="Closed Won">Closed Won</option>
+                        <option value="Contracting">Contracting</option>
+                        <option value="Discovery & Stakeholders">Discovery</option>
+                        <option value="Evaluation Accepted">Evaluation</option>
+                    </select>
+                    
+                    <select id="dataOwnerFilter">
+                        <option value="all">All Owners</option>
+                        <option value="Cameron DeJean">Cameron DeJean</option>
+                        <option value="Adam Terrell">Adam Terrell</option>
+                        <option value="John Sutton">John Sutton</option>
+                        <option value="Zach Busekrus">Zach Busekrus</option>
+                        <option value="Andrew Collins">Andrew Collins</option>
+                        <option value="Carolyn Schneider">Carolyn Schneider</option>
+                    </select>
+                    
+                    <input type="search" id="dataSearchInput" placeholder="Search deals...">
+                    
+                    <button onclick="clearDataFilters()">Clear Filters</button>
+                    <button onclick="exportDataToCSV()">📥 Export CSV</button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortDataTable('name')">Deal Name</th>
+                                <th onclick="sortDataTable('owner')">Owner</th>
+                                <th onclick="sortDataTable('stage')">Stage</th>
+                                <th onclick="sortDataTable('gbv')">GBV</th>
+                                <th onclick="sortDataTable('location')">Location</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 16px; color: #6b7280; font-size: 14px;">
+                    Showing <span id="visibleDataDeals">0</span> deals
+                </div>
+            </section>
         </div>
-        <div class="deal-list-content" id="dealListContent">
-            <!-- Deal cards will be inserted here -->
-        </div>
-    </div>
-    
+    </main>
+
+    <!-- Leaflet + Dependencies -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    <script src="deals-data-dual.js"></script>
-    <script src="app.js"></script>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                const tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                
+                if (this.dataset.tab === 'map' && typeof map !== 'undefined') {
+                    setTimeout(() => map.invalidateSize(), 100);
+                } else if (this.dataset.tab === 'map' && typeof map === 'undefined') {
+                    initMap();
+                }
+            });
+        });
+
+        // Deals data from map files
+        const ALL_DEALS = [
+            {"id":"22362957576","name":"Flohom","stage":"Closed Won","owner":"Adam Terrell","gbv":1026562.5,"lat":38.7848323,"lng":-77.0167864,"city":"National Harbor","state":"MD","country":"US"},
+            {"id":"22365778484","name":"The Annex","stage":"Closed Won","owner":"Adam Terrell","gbv":1314000,"lat":43.6655051,"lng":-79.4074904,"city":"Toronto","state":"Ontario","country":"Canada"},
+            {"id":"22375288865","name":"Dawn Ranch","stage":"Contracting","owner":"John Sutton","gbv":7062750,"lat":38.5106687,"lng":-122.9664838,"city":"Guerneville","state":"CA","country":"United States"},
+            {"id":"28619861346","name":"Abode Luxury Rentals","stage":"Closed Won","owner":"Adam Terrell","gbv":27375000,"lat":43.479965,"lng":-110.761815,"city":"Jackson","state":"WY","country":"United States"},
+            {"id":"28632249443","name":"Fieldtrip","stage":"Closed Won","owner":"Zach Busekrus","gbv":9050175,"lat":34.0536909,"lng":-118.242766,"city":"Los Angeles","state":"CA","country":"United States"},
+            {"id":"29857449749","name":"Lokal Hotels","stage":"Closed Won","owner":"Zach Busekrus","gbv":394200,"lat":39.950781722270776,"lng":-75.14851361796956,"city":"Philadelphia","state":"PA","country":"United States"},
+            {"id":"35028448916","name":"Castle Hill Inn","stage":"Closed Won","owner":"Cameron DeJean","gbv":12647250,"lat":41.464068,"lng":-71.3607727,"city":"Newport","state":"RI","country":"United States"},
+            {"id":"42657509632","name":"Stay Awhile Villas","stage":"Closed Won","owner":"Adam Terrell","gbv":19710000,"lat":34.0715497,"lng":-118.403005,"city":"Beverly Hills","state":"CA","country":"US"},
+            {"id":"45144580420","name":"Estancia La Jolla","stage":"Contracting","owner":"Cameron DeJean","gbv":22075200,"lat":32.8848762,"lng":-117.2448553,"city":"San Diego","state":"California","country":"United States"},
+            {"id":"54616045401","name":"Baillie Lodges","stage":"Discovery & Stakeholders","owner":"Cameron DeJean","gbv":119355000,"lat":-33.638049,"lng":151.3277989,"city":"Sydney","state":"New South Wales","country":"Australia"}
+        ];
+
+        // Data Table
+        function applyDataFilters() {
+            const stageFilter = document.getElementById('dataStageFilter').value;
+            const ownerFilter = document.getElementById('dataOwnerFilter').value;
+            const searchTerm = document.getElementById('dataSearchInput').value.toLowerCase();
+
+            let visible = ALL_DEALS.filter(deal => {
+                const matchesStage = stageFilter === 'all' || deal.stage === stageFilter;
+                const matchesOwner = ownerFilter === 'all' || deal.owner === ownerFilter;
+                const matchesSearch = searchTerm === '' ||
+                    deal.name.toLowerCase().includes(searchTerm) ||
+                    deal.city.toLowerCase().includes(searchTerm);
+                
+                return matchesStage && matchesOwner && matchesSearch;
+            });
+
+            renderDataTable(visible);
+            document.getElementById('visibleDataDeals').textContent = visible.length;
+        }
+
+        function renderDataTable(deals) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = deals.map(deal => `
+                <tr>
+                    <td><strong>${deal.name}</strong></td>
+                    <td>${deal.owner}</td>
+                    <td>${deal.stage}</td>
+                    <td><strong style="color: var(--teal);">$${(deal.gbv / 1000000).toFixed(2)}M</strong></td>
+                    <td>${deal.city}, ${deal.state}</td>
+                </tr>
+            `).join('');
+        }
+
+        function sortDataTable(column) {
+            console.log('Sort by:', column);
+        }
+
+        function clearDataFilters() {
+            document.getElementById('dataStageFilter').value = 'all';
+            document.getElementById('dataOwnerFilter').value = 'all';
+            document.getElementById('dataSearchInput').value = '';
+            applyDataFilters();
+        }
+
+        function exportDataToCSV() {
+            const csv = ['Deal Name,Owner,Stage,GBV,Location'];
+            ALL_DEALS.forEach(d => {
+                csv.push(`"${d.name}","${d.owner}","${d.stage}","${d.gbv}","${d.city}, ${d.state}"`);
+            });
+            
+            const blob = new Blob([csv.join('\\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'journey-deals-export.csv';
+            a.click();
+        }
+
+        document.getElementById('dataStageFilter').addEventListener('change', applyDataFilters);
+        document.getElementById('dataOwnerFilter').addEventListener('change', applyDataFilters);
+        document.getElementById('dataSearchInput').addEventListener('input', applyDataFilters);
+        
+        applyDataFilters();
+
+        // Map initialization
+        let map;
+
+        function initMap() {
+            if (map) return;
+            
+            map = L.map('map-container').setView([39.8283, -98.5795], 4);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap, © CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+            
+            const markers = L.markerClusterGroup();
+            
+            ALL_DEALS.forEach(deal => {
+                const marker = L.marker([deal.lat, deal.lng]);
+                marker.bindPopup(`
+                    <div style="font-family: Inter, sans-serif;">
+                        <div style="font-weight: 600; font-size: 15px; margin-bottom: 6px;">${deal.name}</div>
+                        <div style="font-size: 13px; color: #666;"><strong>Owner:</strong> ${deal.owner}</div>
+                        <div style="font-size: 13px; color: #666;"><strong>GBV:</strong> $${(deal.gbv / 1000000).toFixed(2)}M</div>
+                        <div style="font-size: 13px; color: #666;"><strong>Location:</strong> ${deal.city}, ${deal.state}</div>
+                        <div style="margin-top: 6px; padding: 4px 8px; border-radius: 4px; background: #0d9488; color: white; font-size: 11px; font-weight: 600; display: inline-block;">${deal.stage}</div>
+                    </div>
+                `);
+                markers.addLayer(marker);
+            });
+            
+            map.addLayer(markers);
+        }
+    </script>
 </body>
 </html>
