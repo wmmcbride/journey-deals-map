@@ -569,16 +569,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Region buttons
     document.querySelectorAll('.region-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
             const region = this.dataset.region;
-            currentRegion = region;
+            const wasActive = this.classList.contains('active');
             
-            if (region === 'all') {
+            // If clicking an already active button (and it's not "all"), reset to "all"
+            if (wasActive && region !== 'all') {
+                document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('.region-btn[data-region="all"]').classList.add('active');
+                currentRegion = 'all';
                 map.setView([30, 0], 2);
             } else {
-                map.fitBounds(regions[region].bounds);
+                // Normal behavior - activate clicked button
+                document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentRegion = region;
+                
+                if (region === 'all') {
+                    map.setView([30, 0], 2);
+                } else {
+                    map.fitBounds(regions[region].bounds);
+                }
             }
             
             applyFilters();
