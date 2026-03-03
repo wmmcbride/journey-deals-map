@@ -1,0 +1,659 @@
+<!-- NEW MAP TAB REDESIGN - Map First Approach -->
+<div id="tab-map" class="tab-content">
+    
+    <!-- FULL SCREEN MAP (fills entire viewport) -->
+    <div id="map-container-fullscreen"></div>
+    
+    <!-- FLOATING FILTER PANEL (left side, collapsible) -->
+    <div class="floating-filter-panel" id="filterPanel">
+        <div class="panel-header">
+            <h3>Filters</h3>
+            <button class="panel-collapse-btn" onclick="toggleFilterPanel()">◀</button>
+        </div>
+        
+        <div class="panel-content">
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-mini">
+                    <div class="stat-value" id="visible-deals-count">0</div>
+                    <div class="stat-label">Visible</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-value" id="total-gbv-short">$0</div>
+                    <div class="stat-label">Total GBV</div>
+                </div>
+            </div>
+            
+            <!-- Stage Filters (compact chips) -->
+            <div class="filter-group">
+                <div class="filter-group-header">Stage</div>
+                <div class="filter-chips-compact">
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="closed-won" checked>
+                        <span class="chip-text">✅ Won <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="contracting" checked>
+                        <span class="chip-text">📝 Contract <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="decision" checked>
+                        <span class="chip-text">🤝 Decision <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="solution" checked>
+                        <span class="chip-text">💡 Solution <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="discovery" checked>
+                        <span class="chip-text">🔍 Discovery <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="evaluation" checked>
+                        <span class="chip-text">📊 Evaluation <span class="count">(0)</span></span>
+                    </label>
+                    <label class="filter-chip-compact">
+                        <input type="checkbox" class="stage-filter-check" value="closed-lost">
+                        <span class="chip-text">❌ Lost <span class="count">(0)</span></span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Owner Filters (compact dropdown) -->
+            <div class="filter-group">
+                <div class="filter-group-header">Owner</div>
+                <select class="filter-select-compact" id="ownerFilterCompact">
+                    <option value="all">All Owners</option>
+                    <option value="zach">Zach Busekrus</option>
+                    <option value="adam">Adam Terrell</option>
+                    <option value="cameron">Cameron DeJean</option>
+                    <option value="john">John Sutton</option>
+                    <option value="andrew">Andrew Collins</option>
+                    <option value="carolyn">Carolyn Schneider</option>
+                    <option value="unknown">Unattributed</option>
+                </select>
+            </div>
+            
+            <!-- Search -->
+            <div class="filter-group">
+                <input type="text" class="search-input-compact" id="searchCompact" placeholder="Search deals...">
+            </div>
+            
+            <!-- Actions -->
+            <div class="filter-actions">
+                <button class="btn-reset" onclick="resetAllFilters()">Reset All</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- COLLAPSED FILTER TAB (when panel is collapsed) -->
+    <div class="filter-tab-collapsed" id="filterTabCollapsed" style="display: none;">
+        <button onclick="toggleFilterPanel()">►</button>
+    </div>
+    
+    <!-- TOP MINIMAL HEADER -->
+    <div class="map-header-minimal">
+        <div class="header-left">
+            <h2>Journey Deals</h2>
+        </div>
+        <div class="header-right">
+            <div class="view-toggle-minimal">
+                <button class="view-btn" id="propertyViewBtnMin" onclick="switchView('property')">🏨 Properties</button>
+                <button class="view-btn active" id="hqViewBtnMin" onclick="switchView('hq')">🏢 HQ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOTTOM STATS BAR -->
+    <div class="stats-bar-bottom">
+        <div class="stat-item-bar">
+            <span class="stat-label-bar">Closed Won:</span>
+            <span class="stat-value-bar" id="closedWonStat">$378.7M</span>
+        </div>
+        <div class="stat-item-bar">
+            <span class="stat-label-bar">Active Pipeline:</span>
+            <span class="stat-value-bar" id="pipelineStat">$466.0M</span>
+        </div>
+        <div class="stat-item-bar">
+            <span class="stat-label-bar">Total:</span>
+            <span class="stat-value-bar" id="totalStat">$844.7M</span>
+        </div>
+        <div class="stat-item-bar">
+            <span class="stat-label-bar">Win Rate:</span>
+            <span class="stat-value-bar" id="winRateStat">23%</span>
+        </div>
+        <div class="stat-item-bar unmapped-indicator" onclick="showUnmappedModal()">
+            <span class="stat-label-bar">⚠️ Missing Location:</span>
+            <span class="stat-value-bar" id="unmappedStat">51 deals</span>
+        </div>
+    </div>
+    
+    <!-- UNMAPPED DEALS MODAL (hidden by default, opens on click) -->
+    <div class="unmapped-modal" id="unmappedModal" style="display: none;">
+        <div class="modal-overlay" onclick="closeUnmappedModal()"></div>
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3>⚠️ Deals Without Location Data</h3>
+                <button class="modal-close" onclick="closeUnmappedModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>These deals need company addresses in HubSpot to appear on the map.</p>
+                <table class="unmapped-table-modal" id="unmappedTableModal">
+                    <thead>
+                        <tr>
+                            <th>Deal</th>
+                            <th>Stage</th>
+                            <th>Owner</th>
+                            <th>GBV</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unmappedTbodyModal">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button onclick="exportUnmappedDeals()">📥 Export CSV</button>
+                <button onclick="closeUnmappedModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<style>
+/* MAP TAB REDESIGN - FULL SCREEN MAP FIRST */
+
+#tab-map {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* FULL SCREEN MAP */
+#map-container-fullscreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
+
+/* FLOATING FILTER PANEL */
+.floating-filter-panel {
+    position: absolute;
+    top: 60px;
+    left: 16px;
+    width: 280px;
+    max-height: calc(100vh - 150px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.floating-filter-panel.collapsed {
+    transform: translateX(-100%);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.panel-collapse-btn {
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    color: #666;
+}
+
+.panel-content {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+.panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+/* COLLAPSED TAB */
+.filter-tab-collapsed {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.filter-tab-collapsed button {
+    border: none;
+    background: transparent;
+    padding: 12px 8px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+}
+
+/* QUICK STATS */
+.quick-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.stat-mini {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+}
+
+.stat-mini .stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.stat-mini .stat-label {
+    font-size: 10px;
+    opacity: 0.9;
+    text-transform: uppercase;
+}
+
+/* FILTER GROUPS */
+.filter-group {
+    margin-bottom: 16px;
+}
+
+.filter-group-header {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.filter-chips-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filter-chip-compact {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.filter-chip-compact:hover {
+    background: #e9ecef;
+}
+
+.filter-chip-compact input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.filter-chip-compact .chip-text {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
+
+.filter-chip-compact .count {
+    color: #666;
+    font-size: 11px;
+}
+
+.filter-select-compact {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    background: white;
+}
+
+.search-input-compact {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.filter-actions {
+    margin-top: 16px;
+}
+
+.btn-reset {
+    width: 100%;
+    padding: 8px;
+    background: #f3f4f6;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+    background: #e5e7eb;
+}
+
+/* TOP MINIMAL HEADER */
+.map-header-minimal {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+.map-header-minimal h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.view-toggle-minimal {
+    display: flex;
+    gap: 4px;
+    background: #f3f4f6;
+    padding: 3px;
+    border-radius: 6px;
+}
+
+.view-btn {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.view-btn:hover {
+    background: #e5e7eb;
+}
+
+.view-btn.active {
+    background: #1976d2;
+    color: white;
+}
+
+/* BOTTOM STATS BAR */
+.stats-bar-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 10px 16px;
+    border-top: 1px solid #e0e0e0;
+    z-index: 999;
+}
+
+.stat-item-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-label-bar {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value-bar {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.unmapped-indicator {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.unmapped-indicator:hover {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.unmapped-indicator .stat-value-bar {
+    color: #f59e0b;
+}
+
+/* UNMAPPED MODAL */
+.unmapped-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 900px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+}
+
+.modal-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.unmapped-table-modal {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.unmapped-table-modal th {
+    background: #f8f9fa;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.unmapped-table-modal td {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.unmapped-table-modal tr:hover {
+    background: #f8f9fa;
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.modal-footer button {
+    padding: 8px 16px;
+    border: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-footer button:hover {
+    background: #f3f4f6;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .floating-filter-panel {
+        width: 90%;
+        max-width: 320px;
+    }
+    
+    .stats-bar-bottom {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .stat-item-bar {
+        font-size: 11px;
+    }
+}
+</style>
+
+<script>
+// JavaScript for new map tab functionality
+
+function toggleFilterPanel() {
+    const panel = document.getElementById('filterPanel');
+    const tab = document.getElementById('filterTabCollapsed');
+    
+    if (panel.classList.contains('collapsed')) {
+        panel.classList.remove('collapsed');
+        tab.style.display = 'none';
+    } else {
+        panel.classList.add('collapsed');
+        tab.style.display = 'block';
+    }
+}
+
+function showUnmappedModal() {
+    document.getElementById('unmappedModal').style.display = 'block';
+}
+
+function closeUnmappedModal() {
+    document.getElementById('unmappedModal').style.display = 'none';
+}
+
+function resetAllFilters() {
+    // Check all stage filters
+    document.querySelectorAll('.stage-filter-check').forEach(cb => {
+        if (cb.value !== 'closed-lost') {
+            cb.checked = true;
+        } else {
+            cb.checked = false;
+        }
+    });
+    
+    // Reset owner filter
+    document.getElementById('ownerFilterCompact').value = 'all';
+    
+    // Clear search
+    document.getElementById('searchCompact').value = '';
+    
+    // Trigger filter update
+    applyFilters();
+}
+</script>

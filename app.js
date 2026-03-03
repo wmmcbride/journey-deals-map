@@ -862,3 +862,151 @@ style.innerHTML = `
     }
 `;
 document.head.appendChild(style);
+
+// NEW MAP TAB REDESIGN FUNCTIONS
+
+function toggleFilterPanel() {
+    const panel = document.getElementById('filterPanel');
+    const tab = document.getElementById('filterTabCollapsed');
+    
+    if (panel && tab) {
+        if (panel.classList.contains('collapsed')) {
+            panel.classList.remove('collapsed');
+            tab.style.display = 'none';
+        } else {
+            panel.classList.add('collapsed');
+            tab.style.display = 'block';
+        }
+    }
+}
+
+function showUnmappedModal() {
+    const modal = document.getElementById('unmappedModal');
+    if (modal) {
+        modal.style.display = 'block';
+        // Populate unmapped table in modal
+        populateUnmappedModal();
+    }
+}
+
+function closeUnmappedModal() {
+    const modal = document.getElementById('unmappedModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function populateUnmappedModal() {
+    const tbody = document.getElementById('unmappedTbodyModal');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    // Get unmapped deals from allDealsComplete
+    const unmappedDeals = allDealsComplete.filter(deal => !deal.hasLocation);
+    
+    unmappedDeals.forEach(deal => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${deal.dealname || 'Unnamed Deal'}</strong></td>
+            <td>${deal.stageName || 'Unknown'}</td>
+            <td>${deal.owner || 'Unknown'}</td>
+            <td><strong>${formatCurrency(parseFloat(deal.gbv__rollup_ || 0))}</strong></td>
+            <td>
+                <a href="https://app.hubspot.com/contacts/44645317/record/0-3/${deal.hs_object_id}" 
+                   target="_blank" style="color: #1976d2; text-decoration: none;">
+                    🔗 Add
+                </a>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function resetAllFilters() {
+    // Check all stage filters except closed-lost
+    const stageChecks = document.querySelectorAll('.stage-filter-check');
+    stageChecks.forEach(cb => {
+        if (cb.value !== 'closed-lost') {
+            cb.checked = true;
+        } else {
+            cb.checked = false;
+        }
+    });
+    
+    // Reset owner filter
+    const ownerSelect = document.getElementById('ownerFilterCompact');
+    if (ownerSelect) {
+        ownerSelect.value = 'all';
+    }
+    
+    // Clear search
+    const searchInput = document.getElementById('searchCompact');
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    // Trigger filter update
+    applyFiltersRedesign();
+}
+
+// New filter function for redesigned tab
+function applyFiltersRedesign() {
+    // Get checked stages
+    const checkedStages = Array.from(document.querySelectorAll('.stage-filter-check:checked')).map(cb => cb.value);
+    
+    // Get selected owner
+    const selectedOwner = document.getElementById('ownerFilterCompact')?.value || 'all';
+    
+    // Get search term
+    const searchTerm = (document.getElementById('searchCompact')?.value || '').toLowerCase();
+    
+    // Filter deals
+    let visibleCount = 0;
+    let visibleGBV = 0;
+    
+    allMarkers.forEach(marker => {
+        const deal = marker.dealData;
+        const stageKey = deal.stageName?.toLowerCase().replace(/\s+/g, '-') || '';
+        const ownerKey = deal.owner?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
+        
+        const stageMatch = checkedStages.includes(stageKey);
+        const ownerMatch = selectedOwner === 'all' || ownerKey.includes(selectedOwner);
+        const searchMatch = !searchTerm || 
+            deal.dealname?.toLowerCase().includes(searchTerm) ||
+            deal.companyName?.toLowerCase().includes(searchTerm);
+        
+        if (stageMatch && ownerMatch && searchMatch) {
+            map.addLayer(marker);
+            visibleCount++;
+            visibleGBV += parseFloat(deal.gbv__rollup_ || 0);
+        } else {
+            map.removeLayer(marker);
+        }
+    });
+    
+    // Update stats
+    document.getElementById('visible-deals-count').textContent = visibleCount;
+    document.getElementById('total-gbv-short').textContent = formatCurrency(visibleGBV);
+}
+
+// Hook up event listeners for new redesigned filters
+document.addEventListener('DOMContentLoaded', function() {
+    // Stage filter checkboxes
+    document.querySelectorAll('.stage-filter-check').forEach(cb => {
+        cb.addEventListener('change', applyFiltersRedesign);
+    });
+    
+    // Owner filter
+    const ownerFilter = document.getElementById('ownerFilterCompact');
+    if (ownerFilter) {
+        ownerFilter.addEventListener('change', applyFiltersRedesign);
+    }
+    
+    // Search input
+    const searchInput = document.getElementById('searchCompact');
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFiltersRedesign);
+    }
+});
+
