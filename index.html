@@ -1942,10 +1942,13 @@ function resetAllFilters() {
                 const tabId = 'tab-' + this.dataset.tab;
                 document.getElementById(tabId).classList.add('active');
                 
-                if (this.dataset.tab === 'map' && typeof map !== 'undefined') {
-                    setTimeout(() => map.invalidateSize(), 100);
-                } else if (this.dataset.tab === 'map' && typeof map === 'undefined') {
-                    initMap();
+                if (this.dataset.tab === 'map') {
+                    if (typeof map !== 'undefined' && map) {
+                        setTimeout(() => map.invalidateSize(), 100);
+                    } else {
+                        // Initialize map for first time
+                        initMap();
+                    }
                 }
             });
         });

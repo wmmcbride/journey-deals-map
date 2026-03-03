@@ -183,6 +183,12 @@ function createMarkers() {
 function switchView(newView) {
     if (newView === currentView) return;
     
+    // If map not initialized yet, just update current view and return
+    if (!map || !markers) {
+        currentView = newView;
+        return;
+    }
+    
     currentView = newView;
     
     // Update button states
@@ -577,7 +583,8 @@ function exportToCSV() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    initMap();
+    // Don't init map here - it will be initialized when Map tab is first clicked
+    // (Tab switching code in index.html handles this)
     
     // View toggle buttons
     document.getElementById('propertyViewBtn').addEventListener('click', function() {
