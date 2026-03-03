@@ -60,7 +60,7 @@ const regions = {
 
 // Initialize map
 function initMap() {
-    map = L.map('map').setView([30, 0], 2);
+    map = L.map('map-container').setView([30, 0], 2);
     
     // Add default basemap
     currentBasemap = basemaps.light;
@@ -291,15 +291,32 @@ function applyFilters() {
         }
     });
     
-    // Update stats
-    document.getElementById('statGBV').textContent = '$' + (visibleGBV / 1000000).toFixed(1) + 'M';
-    document.getElementById('statCount').textContent = visibleCount;
-    document.getElementById('statProperties').textContent = visibleProperties.toLocaleString();
-    document.getElementById('statKeys').textContent = visibleKeys.toLocaleString();
+    // Update stats (sidebar stats if they exist)
+    const statGBV = document.getElementById('statGBV');
+    if (statGBV) statGBV.textContent = '$' + (visibleGBV / 1000000).toFixed(1) + 'M';
+    
+    const statCount = document.getElementById('statCount');
+    if (statCount) statCount.textContent = visibleCount;
+    
+    const statProperties = document.getElementById('statProperties');
+    if (statProperties) statProperties.textContent = visibleProperties.toLocaleString();
+    
+    const statKeys = document.getElementById('statKeys');
+    if (statKeys) statKeys.textContent = visibleKeys.toLocaleString();
+    
+    // Update quick stats in floating panel (new design)
+    const visibleDealsCount = document.getElementById('visible-deals-count');
+    if (visibleDealsCount) visibleDealsCount.textContent = visibleCount;
+    
+    const totalGBVShort = document.getElementById('total-gbv-short');
+    if (totalGBVShort) totalGBVShort.textContent = '$' + (visibleGBV / 1000000).toFixed(1) + 'M';
     
     // Update subtitle
-    const viewLabel = currentView === 'property' ? 'Property View' : 'HQ View';
-    document.getElementById('subtitle').textContent = `${visibleCount} ${viewLabel} • $${(visibleGBV / 1000000).toFixed(1)}M GBV`;
+    const subtitle = document.getElementById('subtitle');
+    if (subtitle) {
+        const viewLabel = currentView === 'property' ? 'Property View' : 'HQ View';
+        subtitle.textContent = `${visibleCount} ${viewLabel} • $${(visibleGBV / 1000000).toFixed(1)}M GBV`;
+    }
     
     // Update deal list
     updateDealList(visibleDeals);
@@ -925,7 +942,7 @@ function populateUnmappedModal() {
 
 function resetAllFilters() {
     // Check all stage filters except closed-lost
-    const stageChecks = document.querySelectorAll('.stage-filter-check');
+    const stageChecks = document.querySelectorAll('.stage-filter');
     stageChecks.forEach(cb => {
         if (cb.value !== 'closed-lost') {
             cb.checked = true;
@@ -935,78 +952,21 @@ function resetAllFilters() {
     });
     
     // Reset owner filter
-    const ownerSelect = document.getElementById('ownerFilterCompact');
+    const ownerSelect = document.getElementById('ownerFilter');
     if (ownerSelect) {
         ownerSelect.value = 'all';
     }
     
     // Clear search
-    const searchInput = document.getElementById('searchCompact');
+    const searchInput = document.getElementById('searchBox');
     if (searchInput) {
         searchInput.value = '';
     }
     
     // Trigger filter update
-    applyFiltersRedesign();
+    applyFilters();
 }
 
 // New filter function for redesigned tab
-function applyFiltersRedesign() {
-    // Get checked stages
-    const checkedStages = Array.from(document.querySelectorAll('.stage-filter-check:checked')).map(cb => cb.value);
-    
-    // Get selected owner
-    const selectedOwner = document.getElementById('ownerFilterCompact')?.value || 'all';
-    
-    // Get search term
-    const searchTerm = (document.getElementById('searchCompact')?.value || '').toLowerCase();
-    
-    // Filter deals
-    let visibleCount = 0;
-    let visibleGBV = 0;
-    
-    allMarkers.forEach(marker => {
-        const deal = marker.dealData;
-        const stageKey = deal.stageName?.toLowerCase().replace(/\s+/g, '-') || '';
-        const ownerKey = deal.owner?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
-        
-        const stageMatch = checkedStages.includes(stageKey);
-        const ownerMatch = selectedOwner === 'all' || ownerKey.includes(selectedOwner);
-        const searchMatch = !searchTerm || 
-            deal.dealname?.toLowerCase().includes(searchTerm) ||
-            deal.companyName?.toLowerCase().includes(searchTerm);
-        
-        if (stageMatch && ownerMatch && searchMatch) {
-            map.addLayer(marker);
-            visibleCount++;
-            visibleGBV += parseFloat(deal.gbv__rollup_ || 0);
-        } else {
-            map.removeLayer(marker);
-        }
-    });
-    
-    // Update stats
-    document.getElementById('visible-deals-count').textContent = visibleCount;
-    document.getElementById('total-gbv-short').textContent = formatCurrency(visibleGBV);
-}
-
-// Hook up event listeners for new redesigned filters
-document.addEventListener('DOMContentLoaded', function() {
-    // Stage filter checkboxes
-    document.querySelectorAll('.stage-filter-check').forEach(cb => {
-        cb.addEventListener('change', applyFiltersRedesign);
-    });
-    
-    // Owner filter
-    const ownerFilter = document.getElementById('ownerFilterCompact');
-    if (ownerFilter) {
-        ownerFilter.addEventListener('change', applyFiltersRedesign);
-    }
-    
-    // Search input
-    const searchInput = document.getElementById('searchCompact');
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFiltersRedesign);
-    }
-});
+// Removed duplicate applyFiltersRedesign() - using existing applyFilters() function
 

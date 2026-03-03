@@ -1198,31 +1198,31 @@
                 <div class="filter-group-header">Stage</div>
                 <div class="filter-chips-compact">
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="closed-won" checked>
+                        <input type="checkbox" class="stage-filter" value="closed-won" checked>
                         <span class="chip-text">✅ Won <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="contracting" checked>
+                        <input type="checkbox" class="stage-filter" value="contracting" checked>
                         <span class="chip-text">📝 Contract <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="decision" checked>
+                        <input type="checkbox" class="stage-filter" value="decision" checked>
                         <span class="chip-text">🤝 Decision <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="solution" checked>
+                        <input type="checkbox" class="stage-filter" value="solution" checked>
                         <span class="chip-text">💡 Solution <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="discovery" checked>
+                        <input type="checkbox" class="stage-filter" value="discovery" checked>
                         <span class="chip-text">🔍 Discovery <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="evaluation" checked>
+                        <input type="checkbox" class="stage-filter" value="evaluation" checked>
                         <span class="chip-text">📊 Evaluation <span class="count">(0)</span></span>
                     </label>
                     <label class="filter-chip-compact">
-                        <input type="checkbox" class="stage-filter-check" value="closed-lost">
+                        <input type="checkbox" class="stage-filter" value="closed-lost">
                         <span class="chip-text">❌ Lost <span class="count">(0)</span></span>
                     </label>
                 </div>
@@ -1231,7 +1231,7 @@
             <!-- Owner Filters (compact dropdown) -->
             <div class="filter-group">
                 <div class="filter-group-header">Owner</div>
-                <select class="filter-select-compact" id="ownerFilterCompact">
+                <select class="filter-select-compact" id="ownerFilter">
                     <option value="all">All Owners</option>
                     <option value="zach">Zach Busekrus</option>
                     <option value="adam">Adam Terrell</option>
@@ -1245,7 +1245,7 @@
             
             <!-- Search -->
             <div class="filter-group">
-                <input type="text" class="search-input-compact" id="searchCompact" placeholder="Search deals...">
+                <input type="text" class="search-input-compact" id="searchBox" placeholder="Search deals...">
             </div>
             
             <!-- Actions -->
@@ -1267,8 +1267,8 @@
         </div>
         <div class="header-right">
             <div class="view-toggle-minimal">
-                <button class="view-btn" id="propertyViewBtnMin" onclick="switchView('property')">🏨 Properties</button>
-                <button class="view-btn active" id="hqViewBtnMin" onclick="switchView('hq')">🏢 HQ</button>
+                <button class="view-btn" id="propertyViewBtn" onclick="switchView('property')">🏨 Properties</button>
+                <button class="view-btn active" id="hqViewBtn" onclick="switchView('hq')">🏢 HQ</button>
             </div>
         </div>
     </div>
