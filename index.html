@@ -1274,11 +1274,17 @@
 
             <!-- Unmapped Deals Section -->
             <div class="unmapped-deals-section" id="unmapped-section" style="display: none;">
-                <div class="unmapped-header">
-                    <h3>⚠️ Deals Without Location Data</h3>
-                    <p>These deals need company addresses in HubSpot to appear on the map</p>
+                <div class="unmapped-header" style="cursor: pointer;" onclick="toggleUnmappedSection()">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3>⚠️ Deals Without Location Data (<span id="unmapped-count-header">0</span>)</h3>
+                            <p>These deals need company addresses in HubSpot to appear on the map</p>
+                        </div>
+                        <button class="collapse-toggle" id="unmapped-toggle" style="font-size: 20px; border: none; background: transparent; cursor: pointer; padding: 8px;">▼</button>
+                    </div>
                 </div>
                 
+                <div class="unmapped-content" id="unmapped-content">
                 <div class="unmapped-stats">
                     <div class="stat-card">
                         <div class="stat-value" id="unmapped-total">0</div>
@@ -1309,6 +1315,7 @@
                 <div class="unmapped-actions">
                     <button onclick="exportUnmappedDeals()">📥 Export Unmapped Deals CSV</button>
                     <p class="help-text">Export this list to update addresses in HubSpot, then re-sync the map</p>
+                </div>
                 </div>
             </div>
         </div>
@@ -1688,6 +1695,7 @@
             const totalGBV = unmappedDeals.reduce((sum, d) => sum + parseFloat(d.gbv__rollup_ || 0), 0);
             document.getElementById('unmapped-total').textContent = unmappedDeals.length;
             document.getElementById('unmapped-gbv').textContent = formatCurrency(totalGBV);
+            document.getElementById('unmapped-count-header').textContent = unmappedDeals.length;
             
             return unmappedDeals.length;
         }

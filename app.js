@@ -451,6 +451,22 @@ window.zoomToDeal = function(dealName, companyName) {
     }
 }
 
+// Toggle unmapped deals section
+function toggleUnmappedSection() {
+    const content = document.getElementById('unmapped-content');
+    const toggle = document.getElementById('unmapped-toggle');
+    
+    if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+        toggle.textContent = '▼';
+    } else {
+        content.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+        toggle.textContent = '▶';
+    }
+}
+
 // Export to CSV
 function exportToCSV() {
     const selectedStages = Array.from(document.querySelectorAll('.stage-filter:checked')).map(cb => cb.value);
@@ -663,6 +679,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('exportCSV').addEventListener('click', function() {
         exportToCSV();
     });
+    
+    // Initialize unmapped section as collapsed
+    const unmappedContent = document.getElementById('unmapped-content');
+    const unmappedToggle = document.getElementById('unmapped-toggle');
+    if (unmappedContent && unmappedToggle) {
+        unmappedContent.classList.add('collapsed');
+        unmappedToggle.classList.add('collapsed');
+        unmappedToggle.textContent = '▶';
+    }
 });
 
 // Show deal context modal
