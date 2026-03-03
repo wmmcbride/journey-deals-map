@@ -1673,6 +1673,15 @@
             
             document.getElementById('unmapped-section').style.display = 'block';
             
+            // Ensure content is collapsed when section is shown
+            const unmappedContent = document.getElementById('unmapped-content');
+            const unmappedToggle = document.getElementById('unmapped-toggle');
+            if (unmappedContent && !unmappedContent.classList.contains('collapsed')) {
+                unmappedContent.classList.add('collapsed');
+                unmappedToggle.classList.add('collapsed');
+                unmappedToggle.textContent = '▶';
+            }
+            
             unmappedDeals.forEach(deal => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
