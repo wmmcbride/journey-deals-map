@@ -15,6 +15,16 @@ if (!API_KEY) {
   process.exit(1);
 }
 
+// Load fallback location database for deals that can't be geocoded
+let fallbackLocations = {};
+try {
+  const fallbackData = fs.readFileSync('./fallback-locations.json', 'utf8');
+  fallbackLocations = JSON.parse(fallbackData);
+  console.log(`📍 Loaded ${Object.keys(fallbackLocations).length} fallback locations`);
+} catch (e) {
+  console.log('ℹ️  No fallback locations file found (optional)');
+}
+
 // Stage colors mapping
 const STAGE_COLORS = {
   'Closed Won': '#2e7d32',
@@ -315,8 +325,15 @@ async function main() {
     }
     
     if (!coords) {
-      console.log('  ⚠️  Could not geocode');
-      continue;
+      // Try fallback location database
+      const fallback = fallbackLocations[deal.id];
+      if (fallback) {
+        coords = { lat: fallback.lat, lng: fallback.lng };
+        console.log(`  📍 Using fallback location: ${fallback.city}, ${fallback.state}`);
+      } else {
+        console.log('  ⚠️  Could not geocode (no fallback available)');
+        continue;
+      }
     }
     
     dealsWithCoords++;
@@ -370,10 +387,10 @@ async function main() {
           state: company.properties.state || hqState,
           country: company.properties.country || hqCountry,
           isPrimary: company.id === primaryCompany.id,
-          // Scale metrics per property
-          gbv: Math.round(gbv / companyDetails.length),
-          properties: Math.round(properties / companyDetails.length),
-          keys: Math.round(keys / companyDetails.length)
+          // Keep full metrics on primary company only (don't divide - GBV is per-deal, not per-company)
+          gbv: company.id === primaryCompany.id ? gbv : 0,
+          properties: company.id === primaryCompany.id ? properties : 0,
+          keys: company.id === primaryCompany.id ? keys : 0
         });
       }
     } else {
