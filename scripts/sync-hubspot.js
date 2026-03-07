@@ -65,10 +65,57 @@ async function getAllDeals() {
   let after = undefined;
   
   while (true) {
-    const afterParam = after ? `&after=${after}` : '';
-    const url = `https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=dealname,dealstage,pipeline,hubspot_owner_id,closedate,amount,gbv,gbv__rollup_,properties,keys${afterParam}`;
+    // Use Search API - it returns gbv__rollup_ correctly (pagination endpoint doesn't)
+    const searchPayload = {
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: 'pipeline',
+              operator: 'EQ',
+              value: ALLIANCE_PIPELINE_ID
+            }
+          ]
+        }
+      ],
+      properties: ['dealname', 'dealstage', 'pipeline', 'hubspot_owner_id', 'closedate', 'amount', 'gbv', 'gbv__rollup_', 'properties', 'keys'],
+      limit: 100
+    };
     
-    const data = await fetchJSON(url);
+    if (after) {
+      searchPayload.after = after;
+    }
+    
+    const data = await new Promise((resolve, reject) => {
+      const postData = JSON.stringify(searchPayload);
+      const options = {
+        hostname: 'api.hubapi.com',
+        path: '/crm/v3/objects/deals/search',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+      
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch(e) {
+            reject(new Error(`Failed to parse JSON: ${e.message}`));
+          }
+        });
+      });
+      
+      req.on('error', reject);
+      req.write(postData);
+      req.end();
+    });
+    
     allDeals = allDeals.concat(data.results);
     
     if (!data.paging || !data.paging.next) break;
@@ -203,11 +250,24 @@ async function main() {
     
     console.log(`[${i+1}/${deals.length}] ${props.dealname}`);
     
+    // DEBUG: Log first deal's properties to see what we get from HubSpot
+    if (i === 0) {
+      console.log('  DEBUG - First deal properties:', JSON.stringify({
+        gbv__rollup_: props.gbv__rollup_,
+        gbv: props.gbv,
+        amount: props.amount
+      }, null, 2));
+    }
+    
     // Get deal details
     const stageName = getStageName(props.dealstage);
     const color = STAGE_COLORS[stageName] || '#999';
     const ownerName = ownerCache[props.hubspot_owner_id] || 'Unassigned';
-    const gbv = parseFloat(props.gbv__rollup_ || props.gbv || props.amount || 0);
+    const gbv__rollup_num = parseFloat(props.gbv__rollup_);
+    const gbv_num = parseFloat(props.gbv);
+    const amount_num = parseFloat(props.amount);
+
+    const gbv = (isNaN(gbv__rollup_num) ? 0 : gbv__rollup_num) || (isNaN(gbv_num) ? 0 : gbv_num) || (isNaN(amount_num) ? 0 : amount_num) || 0;
     const properties = parseInt(props.properties || 0);
     const keys = parseInt(props.keys || 0);
     
