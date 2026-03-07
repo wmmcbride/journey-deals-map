@@ -1,0 +1,42 @@
+/* Journey Deals Map V3 - Dark Mode */
+/* Deep blue-black palette (2026 standards, not pure black) */
+
+[data-theme="dark"] {
+  /* Colors - Dark Mode */
+  --bg-primary: #0A0E27;
+  --bg-surface: #151932;
+  --bg-overlay: rgba(21, 25, 50, 0.8);
+  --text-primary: #E2E8F0;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --color-primary: #5E92F3;
+  --color-primary-hover: #4A7FD8;
+  --color-success: #4ADE80;
+  --color-warning: #FDE047;
+  --color-error: #F87171;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+  
+  /* Glassmorphism - Dark Mode */
+  --glass-bg: rgba(21, 25, 50, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* Leaflet Dark Mode Overrides */
+[data-theme="dark"] .leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+[data-theme="dark"] .leaflet-control-zoom a,
+[data-theme="dark"] .leaflet-control-attribution {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .leaflet-control-attribution a {
+  color: var(--color-primary) !important;
+}

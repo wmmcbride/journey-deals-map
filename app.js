@@ -1,302 +1,616 @@
-// Journey Deals Map - Main Application
-// Pure JavaScript implementation
+// Journey Deals Map V3 - Main Application
+// 2026 SaaS Standards: Glassmorphism, Dark Mode, Marker Scaling, localStorage
+// Data source abstraction (API-ready per Tom's guidance)
 
 (function() {
     'use strict';
 
-    // State
-    let map = null;
-    let markerClusterGroup = null;
-    let currentView = 'property'; // 'property' or 'hq'
-    let filteredDeals = [];
-    let allMarkers = [];
+    // ============================================
+    // STATE MANAGEMENT (Tom's guidance: centralized)
+    // ============================================
+    const AppState = {
+        currentView: 'property', // 'property' or 'hq'
+        darkMode: false,
+        filters: {
+            stages: ['Closed Won', 'Evaluation Accepted', 'Discovery & Stakeholders', 'Contracting', 'Solution & Business Alignment', 'Decision & Approval'],
+            owner: 'all',
+            search: ''
+        },
+        map: null,
+        markerClusterGroup: null,
+        filteredDeals: [],
+        allMarkers: [],
+        rawData: null // Data source abstraction
+    };
 
-    // Initialize on page load
+    // ============================================
+    // INITIALIZATION
+    // ============================================
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
+        loadSavedPreferences();
+        initDarkMode();
         initMap();
         setupEventListeners();
         loadData();
     }
 
+    // ============================================
+    // DARK MODE (localStorage persistence)
+    // ============================================
+    function loadSavedPreferences() {
+        // Load dark mode preference
+        const savedTheme = localStorage.getItem('theme');
+        AppState.darkMode = savedTheme === 'dark';
+        
+        // Load view preference
+        const savedView = localStorage.getItem('view');
+        if (savedView) AppState.currentView = savedView;
+        
+        // Load filter preferences
+        const savedFilters = localStorage.getItem('filters');
+        if (savedFilters) {
+            try {
+                AppState.filters = JSON.parse(savedFilters);
+            } catch (e) {
+                console.warn('Failed to parse saved filters:', e);
+            }
+        }
+    }
+
+    function initDarkMode() {
+        const toggle = document.getElementById('dark-mode-toggle');
+        
+        // Apply saved preference
+        if (AppState.darkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            toggle.checked = true;
+        }
+        
+        // Listen for changes
+        toggle.addEventListener('change', toggleDarkMode);
+    }
+
+    function toggleDarkMode() {
+        AppState.darkMode = !AppState.darkMode;
+        
+        if (AppState.darkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+
+    // ============================================
+    // MAP INITIALIZATION
+    // ============================================
     function initMap() {
-        // Initialize Leaflet map
-        map = L.map('map', {
+        AppState.map = L.map('map', {
             center: [39.8283, -98.5795], // Center of USA
             zoom: 4,
-            zoomControl: true
+            zoomControl: true,
+            attributionControl: true
         });
 
         // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 18
-        }).addTo(map);
+        }).addTo(AppState.map);
 
-        // Initialize marker cluster group
-        markerClusterGroup = L.markerClusterGroup({
+        // Initialize marker cluster group (Tom's guidance: Leaflet.markercluster, density-based)
+        AppState.markerClusterGroup = L.markerClusterGroup({
             maxClusterRadius: 50,
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
-            zoomToBoundsOnClick: true
+            zoomToBoundsOnClick: true,
+            chunkedLoading: true // Performance optimization
         });
 
-        map.addLayer(markerClusterGroup);
+        AppState.map.addLayer(AppState.markerClusterGroup);
     }
 
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
     function setupEventListeners() {
         // View toggle
         document.getElementById('view-property').addEventListener('click', () => switchView('property'));
         document.getElementById('view-hq').addEventListener('click', () => switchView('hq'));
 
-        // Filters
-        document.querySelectorAll('.stage-filter').forEach(checkbox => {
+        // Stage filters
+        document.querySelectorAll('#stage-filters input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', applyFilters);
         });
 
-        document.getElementById('owner-filter').addEventListener('change', applyFilters);
-        document.getElementById('search-filter').addEventListener('input', applyFilters);
+        // Owner filter
+        document.getElementById('owner-select').addEventListener('change', applyFilters);
+
+        // Search filter (debounced 300ms per Tom)
+        let searchTimeout;
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                AppState.filters.search = e.target.value;
+                applyFilters();
+            }, 300);
+        });
+
+        // Reset filters button (Tom's guidance: include reset)
         document.getElementById('reset-filters').addEventListener('click', resetFilters);
 
-        // Toggle panel
-        document.getElementById('toggle-panel').addEventListener('click', togglePanel);
+        // Toggle filter panel (mobile)
+        document.getElementById('toggle-filters').addEventListener('click', toggleFilterPanel);
 
-        // Modal
-        document.getElementById('show-unmapped').addEventListener('click', (e) => {
-            e.preventDefault();
-            showUnmappedModal();
+        // Unmapped deals link
+        document.getElementById('unmapped-link').addEventListener('click', showUnmappedModal);
+
+        // Modal tabs
+        document.querySelectorAll('.modal-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => switchModalTab(e.target.dataset.tab));
         });
 
-        document.getElementById('close-modal').addEventListener('click', closeModal);
-        document.getElementById('unmapped-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'unmapped-modal') closeModal();
+        // Modal close
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-overlay') closeModal();
         });
 
-        document.getElementById('export-csv').addEventListener('click', exportUnmappedCSV);
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
     }
 
+    // ============================================
+    // DATA LOADING (Tom's guidance: data source abstraction)
+    // ============================================
     function loadData() {
-        // Data is loaded from external JS files (dualViewData, allDeals)
+        // Data source abstraction: Currently static JS file, but designed for easy API swap
+        // To switch to API: replace this function with fetch() call to backend endpoint
+        // All downstream code works the same (consumes AppState.rawData)
+        
         if (typeof dualViewData === 'undefined') {
-            console.error('dualViewData not loaded');
+            console.error('Data not loaded. Ensure deals-data.js is included.');
             return;
         }
-
-        // Initial load
+        
+        AppState.rawData = dualViewData;
+        
+        // Populate owner dropdown
+        populateOwnerDropdown();
+        
+        // Apply saved filter state
+        restoreFilterState();
+        
+        // Initial render
         applyFilters();
     }
 
-    function switchView(view) {
-        currentView = view;
+    function populateOwnerDropdown() {
+        const ownerSelect = document.getElementById('owner-select');
+        const allDeals = [...AppState.rawData.propertyView, ...AppState.rawData.hqView];
+        
+        // Get unique owners
+        const owners = [...new Set(allDeals.map(d => d.owner))].filter(Boolean).sort();
+        
+        // Clear existing options (except "All Owners")
+        ownerSelect.innerHTML = '<option value="all">All Owners</option>';
+        
+        // Add owner options
+        owners.forEach(owner => {
+            const option = document.createElement('option');
+            option.value = owner;
+            option.textContent = owner;
+            ownerSelect.appendChild(option);
+        });
+    }
 
+    function restoreFilterState() {
+        // Restore stage checkboxes
+        document.querySelectorAll('#stage-filters input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = AppState.filters.stages.includes(checkbox.value);
+        });
+        
+        // Restore owner select
+        document.getElementById('owner-select').value = AppState.filters.owner;
+        
+        // Restore search
+        document.getElementById('search-input').value = AppState.filters.search;
+        
+        // Restore view buttons
+        document.getElementById('view-property').classList.toggle('active', AppState.currentView === 'property');
+        document.getElementById('view-hq').classList.toggle('active', AppState.currentView === 'hq');
+    }
+
+    // ============================================
+    // VIEW SWITCHING
+    // ============================================
+    function switchView(view) {
+        AppState.currentView = view;
+        localStorage.setItem('view', view);
+        
         // Update button states
         document.getElementById('view-property').classList.toggle('active', view === 'property');
         document.getElementById('view-hq').classList.toggle('active', view === 'hq');
-
-        // Reload data
+        
         applyFilters();
     }
 
+    // ============================================
+    // FILTERING
+    // ============================================
     function applyFilters() {
-        // Get filter values
-        const selectedStages = Array.from(document.querySelectorAll('.stage-filter:checked'))
-            .map(cb => cb.value);
+        // Update filter state from UI
+        AppState.filters.stages = Array.from(
+            document.querySelectorAll('#stage-filters input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
         
-        const selectedOwner = document.getElementById('owner-filter').value;
-        const searchQuery = document.getElementById('search-filter').value.toLowerCase();
-
+        AppState.filters.owner = document.getElementById('owner-select').value;
+        // search is updated via debounced event listener
+        
+        // Save to localStorage (Tom's guidance: persist filters)
+        localStorage.setItem('filters', JSON.stringify(AppState.filters));
+        
         // Get data for current view
-        const viewData = currentView === 'property' 
-            ? dualViewData.propertyView 
-            : dualViewData.hqView;
-
-        // Filter deals
-        filteredDeals = viewData.filter(deal => {
+        const viewData = AppState.currentView === 'property' 
+            ? AppState.rawData.propertyView 
+            : AppState.rawData.hqView;
+        
+        // Apply filters
+        AppState.filteredDeals = viewData.filter(deal => {
             // Stage filter
-            if (!selectedStages.includes(deal.stage)) return false;
-
+            if (!AppState.filters.stages.includes(deal.stage)) return false;
+            
             // Owner filter
-            if (selectedOwner !== 'all' && deal.owner !== selectedOwner) return false;
-
+            if (AppState.filters.owner !== 'all' && deal.owner !== AppState.filters.owner) return false;
+            
             // Search filter
-            if (searchQuery) {
-                const searchText = `${deal.name} ${deal.companyName} ${deal.city} ${deal.state}`.toLowerCase();
-                if (!searchText.includes(searchQuery)) return false;
+            if (AppState.filters.search) {
+                const searchText = `${deal.name} ${deal.companyName || ''} ${deal.city || ''} ${deal.state || ''}`.toLowerCase();
+                if (!searchText.includes(AppState.filters.search.toLowerCase())) return false;
             }
-
+            
             return true;
         });
-
-        // Update map
+        
         updateMap();
-
-        // Update stats
         updateStats();
     }
 
-    function updateMap() {
-        // Clear existing markers
-        markerClusterGroup.clearLayers();
-        allMarkers = [];
-
-        // Add filtered markers
-        filteredDeals.forEach(deal => {
-            const marker = createMarker(deal);
-            allMarkers.push(marker);
-            markerClusterGroup.addLayer(marker);
-        });
-
-        // Fit bounds if markers exist
-        if (allMarkers.length > 0) {
-            const bounds = markerClusterGroup.getBounds();
-            if (bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-        }
-    }
-
-    function createMarker(deal) {
-        // Create custom icon based on stage
-        const iconClass = getMarkerClass(deal.stage);
-        const icon = L.divIcon({
-            className: iconClass,
-            iconSize: [16, 16]
-        });
-
-        // Create marker
-        const marker = L.marker([deal.lat, deal.lng], { icon });
-
-        // Create popup content
-        const popupContent = createPopupContent(deal);
-        marker.bindPopup(popupContent);
-
-        return marker;
-    }
-
-    function getMarkerClass(stage) {
-        if (stage === 'Closed Won') return 'marker-won';
-        if (stage === 'Closed Lost') return 'marker-lost';
-        return 'marker-pipeline';
-    }
-
-    function createPopupContent(deal) {
-        const gbvFormatted = formatCurrency(deal.gbv);
-        const location = `${deal.city}, ${deal.state}`;
-        
-        return `
-            <div style="min-width: 200px;">
-                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">${deal.name}</h3>
-                <div style="font-size: 13px; color: #666; line-height: 1.6;">
-                    <div><strong>Owner:</strong> ${deal.owner}</div>
-                    <div><strong>GBV:</strong> ${gbvFormatted}</div>
-                    <div><strong>Stage:</strong> ${deal.stage}</div>
-                    <div><strong>Location:</strong> ${location}</div>
-                    ${currentView === 'property' ? 
-                        `<div><strong>Properties:</strong> ${deal.properties || 0} | <strong>Keys:</strong> ${deal.keys || 0}</div>` 
-                        : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    function updateStats() {
-        // Calculate total GBV for visible deals
-        const totalGBV = filteredDeals.reduce((sum, deal) => sum + (deal.gbv || 0), 0);
-
-        // Update mini stats in filter panel
-        document.getElementById('visible-count').textContent = filteredDeals.length;
-        document.getElementById('visible-gbv').textContent = formatCurrency(totalGBV);
-    }
-
     function resetFilters() {
-        // Check all stage filters
-        document.querySelectorAll('.stage-filter').forEach(cb => cb.checked = true);
-
-        // Reset owner dropdown
-        document.getElementById('owner-filter').value = 'all';
-
-        // Clear search
-        document.getElementById('search-filter').value = '';
-
+        // Reset to defaults
+        AppState.filters = {
+            stages: ['Closed Won', 'Evaluation Accepted', 'Discovery & Stakeholders', 'Contracting', 'Solution & Business Alignment', 'Decision & Approval'],
+            owner: 'all',
+            search: ''
+        };
+        
+        // Clear localStorage
+        localStorage.removeItem('filters');
+        
+        // Update UI
+        restoreFilterState();
+        
         // Reapply
         applyFilters();
     }
 
-    function togglePanel() {
+    function toggleFilterPanel() {
         const panel = document.getElementById('filter-panel');
-        const button = document.getElementById('toggle-panel');
-        
-        panel.classList.toggle('collapsed');
-        button.textContent = panel.classList.contains('collapsed') ? '▶' : '◀';
+        panel.classList.toggle('open');
     }
 
-    function showUnmappedModal() {
-        // Get unmapped deals
-        const unmappedDeals = typeof allDeals !== 'undefined' 
-            ? allDeals.filter(deal => !deal.lat || !deal.lng)
-            : [];
-
-        // Populate table
-        const tbody = document.getElementById('unmapped-table-body');
-        tbody.innerHTML = '';
-
-        unmappedDeals.forEach(deal => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${deal.name}</td>
-                <td>${deal.owner || 'Unattributed'}</td>
-                <td>${deal.stage}</td>
-                <td>${formatCurrency(deal.gbv || 0)}</td>
-            `;
-            tbody.appendChild(row);
+    // ============================================
+    // MAP RENDERING
+    // ============================================
+    function updateMap() {
+        // Clear existing markers
+        AppState.markerClusterGroup.clearLayers();
+        AppState.allMarkers = [];
+        
+        // Add filtered markers
+        AppState.filteredDeals.forEach(deal => {
+            if (deal.latitude && deal.longitude) {
+                const marker = createMarker(deal);
+                AppState.allMarkers.push(marker);
+                AppState.markerClusterGroup.addLayer(marker);
+            }
         });
+        
+        // Fit bounds if markers exist
+        if (AppState.allMarkers.length > 0) {
+            const bounds = AppState.markerClusterGroup.getBounds();
+            AppState.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        }
+    }
 
+    // ============================================
+    // MARKER CREATION (Scaled by GBV + Pulse Animation)
+    // ============================================
+    function createMarker(deal) {
+        const gbv = deal.gbv || 0;
+        
+        // Marker size scaling by GBV (V3 feature)
+        let markerSize, iconSize, className;
+        
+        if (gbv < 1000000) {
+            // Small: < $1M
+            markerSize = 12;
+            iconSize = [20, 20];
+            className = 'marker-small';
+        } else if (gbv < 10000000) {
+            // Medium: $1M - $10M
+            markerSize = 16;
+            iconSize = [24, 24];
+            className = 'marker-medium';
+        } else if (gbv < 50000000) {
+            // Large: $10M - $50M
+            markerSize = 24;
+            iconSize = [32, 32];
+            className = 'marker-large';
+        } else {
+            // Mega: > $50M (with pulse animation)
+            markerSize = 32;
+            iconSize = [40, 40];
+            className = 'marker-mega marker-pulse';
+        }
+        
+        // Stage color
+        const stageColors = {
+            'Closed Won': '#00C853',
+            'Evaluation Accepted': '#2962FF',
+            'Discovery & Stakeholders': '#2962FF',
+            'Contracting': '#FFD600',
+            'Solution & Business Alignment': '#2962FF',
+            'Decision & Approval': '#FFD600',
+            'Closed Lost': '#D50000'
+        };
+        
+        const color = stageColors[deal.stage] || '#64748B';
+        
+        // Custom marker icon
+        const icon = L.divIcon({
+            className: `custom-marker ${className}`,
+            html: `<div style="
+                width: ${markerSize}px;
+                height: ${markerSize}px;
+                background: ${color};
+                border: 2px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: iconSize,
+            iconAnchor: [markerSize / 2, markerSize / 2]
+        });
+        
+        // Create marker
+        const marker = L.marker([deal.latitude, deal.longitude], { icon });
+        
+        // Popup
+        const popupContent = createPopupContent(deal);
+        marker.bindPopup(popupContent, {
+            maxWidth: 300,
+            className: 'deal-popup'
+        });
+        
+        // Click to open enhanced modal
+        marker.on('click', () => openDealModal(deal));
+        
+        return marker;
+    }
+
+    function createPopupContent(deal) {
+        const gbvFormatted = formatCurrency(deal.gbv || 0);
+        
+        return `
+            <div style="padding: 4px;">
+                <strong style="font-size: 14px;">${deal.name}</strong><br>
+                <span style="color: #64748B; font-size: 12px;">${deal.stage}</span><br>
+                <span style="font-weight: 600; font-size: 14px;">${gbvFormatted}</span><br>
+                <span style="font-size: 12px;">${deal.owner || 'Unassigned'}</span><br>
+                <span style="font-size: 11px; color: #94A3B8;">${deal.city || ''}, ${deal.state || ''}</span>
+            </div>
+        `;
+    }
+
+    // ============================================
+    // ENHANCED MODAL (Full-Screen with Tabs)
+    // ============================================
+    function openDealModal(deal) {
+        const modal = document.getElementById('modal-overlay');
+        const titleEl = document.getElementById('modal-title');
+        const contentEl = document.getElementById('modal-body-content');
+        
+        // Set title
+        titleEl.textContent = deal.name;
+        
+        // Set overview content
+        const gbvFormatted = formatCurrency(deal.gbv || 0);
+        const propertiesCount = deal.propertyCount || 1;
+        const keysCount = deal.keyCount || 0;
+        
+        contentEl.innerHTML = `
+            <div style="display: grid; gap: 16px;">
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Company</div>
+                    <div style="font-size: 16px; font-weight: 600;">${deal.companyName || deal.name}</div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">GBV</div>
+                    <div style="font-size: 24px; font-weight: 700; color: var(--color-primary);">${gbvFormatted}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Stage</div>
+                        <div style="font-size: 14px; font-weight: 500;">${deal.stage}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Owner</div>
+                        <div style="font-size: 14px; font-weight: 500;">${deal.owner || 'Unassigned'}</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Properties</div>
+                        <div style="font-size: 14px; font-weight: 500;">${propertiesCount}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Total Keys</div>
+                        <div style="font-size: 14px; font-weight: 500;">${keysCount.toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Location</div>
+                    <div style="font-size: 14px;">${deal.city || ''}, ${deal.state || ''}</div>
+                </div>
+            </div>
+        `;
+        
         // Show modal
-        document.getElementById('unmapped-modal').classList.add('show');
+        modal.classList.remove('hidden');
+        
+        // Reset to overview tab
+        switchModalTab('overview');
+    }
+
+    function switchModalTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.modal-tab').forEach(tab => {
+            const isActive = tab.dataset.tab === tabName;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', isActive);
+        });
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `tab-${tabName}`);
+        });
     }
 
     function closeModal() {
-        document.getElementById('unmapped-modal').classList.remove('show');
+        document.getElementById('modal-overlay').classList.add('hidden');
+        document.getElementById('unmapped-modal').classList.add('hidden');
     }
 
-    function exportUnmappedCSV() {
-        const unmappedDeals = typeof allDeals !== 'undefined' 
-            ? allDeals.filter(deal => !deal.lat || !deal.lng)
-            : [];
+    // ============================================
+    // STATS CALCULATION
+    // ============================================
+    function updateStats() {
+        const allData = AppState.currentView === 'property' 
+            ? AppState.rawData.propertyView 
+            : AppState.rawData.hqView;
+        
+        // Closed Won
+        const closedWon = allData
+            .filter(d => d.stage === 'Closed Won')
+            .reduce((sum, d) => sum + (d.gbv || 0), 0);
+        
+        // Active Pipeline (non-closed stages)
+        const pipeline = allData
+            .filter(d => d.stage !== 'Closed Won' && d.stage !== 'Closed Lost')
+            .reduce((sum, d) => sum + (d.gbv || 0), 0);
+        
+        // Total GBV
+        const total = allData.reduce((sum, d) => sum + (d.gbv || 0), 0);
+        
+        // Win Rate
+        const wonDeals = allData.filter(d => d.stage === 'Closed Won').length;
+        const lostDeals = allData.filter(d => d.stage === 'Closed Lost').length;
+        const totalClosed = wonDeals + lostDeals;
+        const winRate = totalClosed > 0 ? ((wonDeals / totalClosed) * 100).toFixed(1) : 0;
+        
+        // Unmapped
+        const unmapped = allData.filter(d => !d.latitude || !d.longitude).length;
+        
+        // Update DOM
+        document.getElementById('stat-closed-won').textContent = formatCurrency(closedWon);
+        document.getElementById('stat-pipeline').textContent = formatCurrency(pipeline);
+        document.getElementById('stat-total').textContent = formatCurrency(total);
+        document.getElementById('stat-win-rate').textContent = `${winRate}%`;
+        document.getElementById('stat-unmapped').textContent = unmapped;
+    }
 
-        // Create CSV content
-        const headers = ['Deal Name', 'Owner', 'Stage', 'GBV', 'Company'];
-        const rows = unmappedDeals.map(deal => [
-            deal.name,
-            deal.owner || 'Unattributed',
-            deal.stage,
-            deal.gbv || 0,
-            deal.companyName || ''
+    // ============================================
+    // UNMAPPED DEALS MODAL
+    // ============================================
+    function showUnmappedModal() {
+        const allData = AppState.currentView === 'property' 
+            ? AppState.rawData.propertyView 
+            : AppState.rawData.hqView;
+        
+        const unmapped = allData.filter(d => !d.latitude || !d.longitude);
+        
+        const listEl = document.getElementById('unmapped-list');
+        listEl.innerHTML = unmapped.length === 0 
+            ? '<p class="text-muted">All deals have valid coordinates! 🎉</p>'
+            : unmapped.map(d => `
+                <div style="padding: 8px; border-bottom: 1px solid var(--border-color);">
+                    <strong>${d.name}</strong><br>
+                    <span style="font-size: 12px; color: var(--text-secondary);">${d.owner || 'Unassigned'} • ${formatCurrency(d.gbv || 0)}</span>
+                </div>
+            `).join('');
+        
+        document.getElementById('unmapped-modal').classList.remove('hidden');
+        
+        // Export button
+        document.getElementById('export-unmapped').onclick = () => exportUnmappedCSV(unmapped);
+    }
+
+    function exportUnmappedCSV(unmapped) {
+        const headers = ['Deal Name', 'Owner', 'Stage', 'GBV', 'City', 'State'];
+        const rows = unmapped.map(d => [
+            d.name,
+            d.owner || '',
+            d.stage,
+            d.gbv || 0,
+            d.city || '',
+            d.state || ''
         ]);
-
-        const csvContent = [
+        
+        const csv = [
             headers.join(','),
             ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
         ].join('\n');
-
-        // Download
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'unmapped-deals.csv';
-        link.click();
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'journey-unmapped-deals.csv';
+        a.click();
         URL.revokeObjectURL(url);
     }
 
+    // ============================================
+    // UTILITIES
+    // ============================================
     function formatCurrency(value) {
-        if (value >= 1000000) {
-            return '$' + (value / 1000000).toFixed(1) + 'M';
-        }
-        if (value >= 1000) {
-            return '$' + (value / 1000).toFixed(0) + 'K';
-        }
-        return '$' + value.toFixed(0);
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+        if (value >= 1e3) return `$${(value / 1e3).toFixed(0)}K`;
+        return `$${value.toFixed(0)}`;
     }
+
+    // Add CSS for pulse animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes marker-pulse {
+            0% { box-shadow: 0 0 0 0 currentColor; }
+            70% { box-shadow: 0 0 0 10px transparent; }
+            100% { box-shadow: 0 0 0 0 transparent; }
+        }
+        .marker-pulse > div {
+            animation: marker-pulse 2s infinite;
+        }
+    `;
+    document.head.appendChild(style);
+
 })();

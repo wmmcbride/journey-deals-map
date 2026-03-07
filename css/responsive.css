@@ -1,0 +1,155 @@
+/* Journey Deals Map V3 - Responsive Styles */
+/* Tom's guidance: 768/480 breakpoints + min-height for landscape */
+
+/* ============================================
+   TABLET (768px and below)
+   ============================================ */
+@media (max-width: 768px) {
+  #header h1 {
+    font-size: var(--text-lg);
+  }
+  
+  #filter-panel {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    bottom: 80px;
+    width: 100%;
+    max-width: 320px;
+    transform: translateX(-100%);
+    z-index: 1500;
+  }
+  
+  #filter-panel.open {
+    transform: translateX(0);
+  }
+  
+  /* Bottom sheet for filters on mobile */
+  #stats-bar {
+    flex-wrap: wrap;
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .stat-card {
+    min-width: calc(50% - var(--space-sm));
+  }
+  
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-header {
+    padding: var(--space-md);
+  }
+  
+  .modal-body {
+    padding: var(--space-md);
+  }
+}
+
+/* ============================================
+   MOBILE (480px and below)
+   ============================================ */
+@media (max-width: 480px) {
+  #header {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  #header h1 {
+    font-size: var(--text-base);
+  }
+  
+  #header-controls {
+    gap: var(--space-xs);
+  }
+  
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+  
+  /* Stack stats vertically on small mobile */
+  .stat-card {
+    min-width: 100%;
+  }
+  
+  /* Touch-friendly tap targets (44px minimum) */
+  button {
+    min-height: 44px;
+    padding: var(--space-sm) var(--space-lg);
+  }
+  
+  .checkbox-item {
+    min-height: 44px;
+    padding: var(--space-sm);
+  }
+  
+  /* Modal adjustments */
+  .modal-content {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .modal-tabs {
+    overflow-x: auto;
+    gap: var(--space-xs);
+  }
+  
+  .modal-tab {
+    white-space: nowrap;
+  }
+}
+
+/* ============================================
+   LANDSCAPE PHONES (min-height check per Tom)
+   ============================================ */
+@media (max-height: 480px) and (orientation: landscape) {
+  #filter-panel {
+    overflow-y: auto;
+  }
+  
+  .filter-section {
+    padding: var(--space-md);
+  }
+  
+  #stats-bar {
+    padding: var(--space-xs) var(--space-md);
+  }
+  
+  .stat-card {
+    min-width: 120px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .stat-value {
+    font-size: var(--text-xl);
+  }
+}
+
+/* ============================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  button, .checkbox-item, .modal-tab {
+    min-height: 44px;
+  }
+  
+  /* Remove hover states on touch devices */
+  .stat-card:hover {
+    transform: none;
+  }
+  
+  .checkbox-item:hover {
+    background: transparent;
+  }
+  
+  /* Larger map controls */
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+  }
+}
