@@ -1,38 +1,69 @@
-/* Journey Deals Map V3 - Dark Mode */
-/* Deep blue-black palette (2026 standards, not pure black) */
+/* Journey Deals Map V3 - Rich Dark Mode */
 
 [data-theme="dark"] {
-  /* Colors - Dark Mode */
-  --bg-primary: #0A0E27;
-  --bg-surface: #151932;
-  --bg-overlay: rgba(21, 25, 50, 0.8);
-  --text-primary: #E2E8F0;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
-  --color-primary: #5E92F3;
-  --color-primary-hover: #4A7FD8;
-  --color-success: #4ADE80;
-  --color-warning: #FDE047;
-  --color-error: #F87171;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
-  
-  /* Glassmorphism - Dark Mode */
-  --glass-bg: rgba(21, 25, 50, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --bg-primary: #070d18;
+  --bg-surface: #101a2b;
+  --bg-surface-soft: rgba(14, 23, 38, 0.74);
+  --bg-overlay: rgba(13, 22, 37, 0.78);
+  --text-primary: #eef4ff;
+  --text-secondary: #a8b6d1;
+  --text-tertiary: #7f8fab;
+  --color-primary: #5d9cff;
+  --color-primary-hover: #4b89ee;
+  --color-primary-soft: rgba(93, 156, 255, 0.2);
+  --border-color: rgba(168, 189, 220, 0.18);
+  --border-strong: rgba(168, 189, 220, 0.34);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 14px 34px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 25px 60px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 40px 90px rgba(0, 0, 0, 0.62);
+  --glass-bg: var(--bg-surface-soft);
+  --glass-border: rgba(170, 193, 224, 0.18);
 }
 
-/* Leaflet Dark Mode Overrides */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(32, 70, 126, 0.4) 0%, transparent 36%),
+    radial-gradient(circle at 100% 100%, rgba(68, 42, 97, 0.26) 0%, transparent 34%),
+    linear-gradient(155deg, #070d18 0%, #0a1221 55%, #08111f 100%);
+}
+
+[data-theme="dark"] .view-toggle {
+  background: rgba(9, 17, 30, 0.72);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .map-empty-state {
+  background: linear-gradient(165deg, rgba(15, 26, 43, 0.93), rgba(12, 22, 37, 0.88));
+  border-color: rgba(168, 189, 220, 0.2);
+}
+
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-icon,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] select,
+[data-theme="dark"] .map-loading {
+  background: rgba(10, 18, 31, 0.84);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .checkbox-item:hover,
+[data-theme="dark"] .modal-tab:hover {
+  background: rgba(93, 156, 255, 0.15);
+  border-color: rgba(93, 156, 255, 0.24);
+}
+
 [data-theme="dark"] .leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  filter: brightness(0.58) invert(1) contrast(2.5) hue-rotate(192deg) saturate(0.45) brightness(0.85);
 }
 
 [data-theme="dark"] .leaflet-control-zoom a,
 [data-theme="dark"] .leaflet-control-attribution {
-  background: var(--bg-surface) !important;
+  background: rgba(10, 18, 31, 0.9) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-color) !important;
 }

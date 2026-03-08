@@ -32,6 +32,7 @@
         loadSavedPreferences();
         initDarkMode();
         initMap();
+        initVisualStates();
         setupEventListeners();
         loadData();
     }
@@ -113,6 +114,30 @@
         AppState.map.addLayer(AppState.markerClusterGroup);
     }
 
+    function initVisualStates() {
+        const mapContainer = document.getElementById('map-container');
+        if (!mapContainer) return;
+
+        if (!document.getElementById('map-loading')) {
+            const loading = document.createElement('div');
+            loading.id = 'map-loading';
+            loading.className = 'map-loading';
+            loading.innerHTML = '<span class="loading-dot" aria-hidden="true"></span><span>Loading deals</span>';
+            mapContainer.appendChild(loading);
+        }
+
+        if (!document.getElementById('map-empty-state')) {
+            const emptyState = document.createElement('div');
+            emptyState.id = 'map-empty-state';
+            emptyState.className = 'map-empty-state hidden';
+            emptyState.innerHTML = `
+                <h3>No deals match these filters</h3>
+                <p>Try broadening stage, owner, or search criteria to see results on the map.</p>
+            `;
+            mapContainer.appendChild(emptyState);
+        }
+    }
+
     // ============================================
     // EVENT LISTENERS
     // ============================================
@@ -175,6 +200,7 @@
         
         if (typeof dualViewData === 'undefined') {
             console.error('Data not loaded. Ensure deals-data.js is included.');
+            setMapLoading(false);
             return;
         }
         
@@ -188,6 +214,7 @@
         
         // Initial render
         applyFilters();
+        setMapLoading(false);
     }
 
     function populateOwnerDropdown() {
@@ -326,6 +353,22 @@
             const bounds = AppState.markerClusterGroup.getBounds();
             AppState.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
         }
+
+        toggleEmptyState();
+    }
+
+    function setMapLoading(isLoading) {
+        const loading = document.getElementById('map-loading');
+        if (loading) {
+            loading.classList.toggle('hidden', !isLoading);
+        }
+    }
+
+    function toggleEmptyState() {
+        const emptyState = document.getElementById('map-empty-state');
+        if (!emptyState) return;
+
+        emptyState.classList.toggle('hidden', AppState.filteredDeals.length > 0);
     }
 
     // ============================================
@@ -434,42 +477,42 @@
         const keysCount = deal.keyCount || 0;
         
         contentEl.innerHTML = `
-            <div style="display: grid; gap: 16px;">
-                <div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Company</div>
-                    <div style="font-size: 16px; font-weight: 600;">${deal.companyName || deal.name}</div>
+            <div class="modal-overview-grid">
+                <div class="modal-overview-card">
+                    <div class="modal-overview-key">Company</div>
+                    <div class="modal-overview-value">${deal.companyName || deal.name}</div>
                 </div>
                 
-                <div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">GBV</div>
-                    <div style="font-size: 24px; font-weight: 700; color: var(--color-primary);">${gbvFormatted}</div>
+                <div class="modal-overview-card">
+                    <div class="modal-overview-key">GBV</div>
+                    <div class="modal-overview-value metric">${gbvFormatted}</div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Stage</div>
-                        <div style="font-size: 14px; font-weight: 500;">${deal.stage}</div>
+                <div class="modal-overview-split">
+                    <div class="modal-overview-card">
+                        <div class="modal-overview-key">Stage</div>
+                        <div class="modal-overview-value">${deal.stage}</div>
                     </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Owner</div>
-                        <div style="font-size: 14px; font-weight: 500;">${deal.owner || 'Unassigned'}</div>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Properties</div>
-                        <div style="font-size: 14px; font-weight: 500;">${propertiesCount}</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Total Keys</div>
-                        <div style="font-size: 14px; font-weight: 500;">${keysCount.toLocaleString()}</div>
+                    <div class="modal-overview-card">
+                        <div class="modal-overview-key">Owner</div>
+                        <div class="modal-overview-value">${deal.owner || 'Unassigned'}</div>
                     </div>
                 </div>
                 
-                <div>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Location</div>
-                    <div style="font-size: 14px;">${deal.city || ''}, ${deal.state || ''}</div>
+                <div class="modal-overview-split">
+                    <div class="modal-overview-card">
+                        <div class="modal-overview-key">Properties</div>
+                        <div class="modal-overview-value">${propertiesCount}</div>
+                    </div>
+                    <div class="modal-overview-card">
+                        <div class="modal-overview-key">Total Keys</div>
+                        <div class="modal-overview-value">${keysCount.toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                <div class="modal-overview-card">
+                    <div class="modal-overview-key">Location</div>
+                    <div class="modal-overview-value">${deal.city || ''}, ${deal.state || ''}</div>
                 </div>
             </div>
         `;

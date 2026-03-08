@@ -1,155 +1,181 @@
-/* Journey Deals Map V3 - Responsive Styles */
-/* Tom's guidance: 768/480 breakpoints + min-height for landscape */
+/* Journey Deals Map V3 - Responsive Polish */
 
-/* ============================================
-   TABLET (768px and below)
-   ============================================ */
-@media (max-width: 768px) {
-  #header h1 {
-    font-size: var(--text-lg);
+@media (max-width: 1080px) {
+  #stats-bar {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
   }
-  
+
+  #filter-panel {
+    width: 312px;
+  }
+}
+
+@media (max-width: 840px) {
+  #header {
+    padding: 12px 14px;
+    min-height: 64px;
+  }
+
+  #header h1 {
+    font-size: 1.15rem;
+  }
+
+  #toggle-filters {
+    display: flex;
+  }
+
   #filter-panel {
     position: fixed;
     left: 0;
-    top: 60px;
-    bottom: 80px;
-    width: 100%;
-    max-width: 320px;
-    transform: translateX(-100%);
+    top: 64px;
+    bottom: 108px;
+    width: 92vw;
+    max-width: 336px;
+    transform: translateX(-102%);
     z-index: 1500;
+    border-right: 1px solid var(--border-color);
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
   }
-  
+
   #filter-panel.open {
     transform: translateX(0);
   }
-  
-  /* Bottom sheet for filters on mobile */
+
   #stats-bar {
-    flex-wrap: wrap;
-    padding: var(--space-sm) var(--space-md);
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+    gap: 10px;
+    padding: 10px 12px;
   }
-  
+
   .stat-card {
-    min-width: calc(50% - var(--space-sm));
+    min-height: 84px;
   }
-  
+
   .modal-content {
-    width: 95%;
-    max-height: 95vh;
+    width: 96vw;
+    max-height: 94vh;
   }
-  
+
   .modal-header {
-    padding: var(--space-md);
+    padding: 14px 16px;
   }
-  
+
   .modal-body {
-    padding: var(--space-md);
+    padding: 14px;
   }
 }
 
-/* ============================================
-   MOBILE (480px and below)
-   ============================================ */
-@media (max-width: 480px) {
-  #header {
-    padding: var(--space-sm) var(--space-md);
-  }
-  
+@media (max-width: 560px) {
   #header h1 {
-    font-size: var(--text-base);
+    font-size: 1.05rem;
   }
-  
+
   #header-controls {
-    gap: var(--space-xs);
+    gap: 6px;
   }
-  
+
+  .view-toggle button {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+
   .btn-icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
-  
-  /* Stack stats vertically on small mobile */
+
+  #stats-bar {
+    grid-template-columns: 1fr;
+    max-height: 34vh;
+    overflow-y: auto;
+  }
+
   .stat-card {
-    min-width: 100%;
+    min-height: 78px;
   }
-  
-  /* Touch-friendly tap targets (44px minimum) */
+
+  .stat-value {
+    font-size: 1.4rem;
+  }
+
   button {
     min-height: 44px;
-    padding: var(--space-sm) var(--space-lg);
   }
-  
+
+  input[type="text"],
+  input[type="search"],
+  select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   .checkbox-item {
     min-height: 44px;
-    padding: var(--space-sm);
   }
-  
-  /* Modal adjustments */
+
   .modal-content {
-    width: 100%;
+    width: 100vw;
     max-height: 100vh;
     border-radius: 0;
   }
-  
+
   .modal-tabs {
     overflow-x: auto;
-    gap: var(--space-xs);
+    padding-bottom: 10px;
   }
-  
+
   .modal-tab {
     white-space: nowrap;
   }
+
+  .modal-overview-split {
+    grid-template-columns: 1fr;
+  }
+
+  .map-empty-state {
+    width: calc(100% - 20px);
+    padding: 16px;
+  }
+
+  .map-loading {
+    right: 10px;
+    top: 10px;
+  }
 }
 
-/* ============================================
-   LANDSCAPE PHONES (min-height check per Tom)
-   ============================================ */
-@media (max-height: 480px) and (orientation: landscape) {
+@media (max-height: 500px) and (orientation: landscape) {
   #filter-panel {
     overflow-y: auto;
+    bottom: 86px;
   }
-  
-  .filter-section {
-    padding: var(--space-md);
-  }
-  
+
   #stats-bar {
-    padding: var(--space-xs) var(--space-md);
+    padding: 8px;
   }
-  
+
   .stat-card {
-    min-width: 120px;
-    padding: var(--space-xs) var(--space-sm);
+    min-height: 68px;
+    padding: 8px 10px;
   }
-  
-  .stat-value {
-    font-size: var(--text-xl);
+
+  .stat-label {
+    margin-bottom: 2px;
   }
 }
 
-/* ============================================
-   TOUCH DEVICE OPTIMIZATIONS
-   ============================================ */
 @media (hover: none) and (pointer: coarse) {
-  /* Larger touch targets */
-  button, .checkbox-item, .modal-tab {
-    min-height: 44px;
-  }
-  
-  /* Remove hover states on touch devices */
-  .stat-card:hover {
+  .stat-card:hover,
+  .checkbox-item:hover,
+  .btn-secondary:hover,
+  .btn-icon:hover,
+  button:hover {
     transform: none;
   }
-  
-  .checkbox-item:hover {
-    background: transparent;
-  }
-  
-  /* Larger map controls */
+
   .leaflet-control-zoom a {
-    width: 36px !important;
-    height: 36px !important;
-    line-height: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
+    line-height: 38px !important;
   }
 }
