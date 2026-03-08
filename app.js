@@ -341,7 +341,7 @@
         
         // Add filtered markers
         AppState.filteredDeals.forEach(deal => {
-            if (deal.latitude && deal.longitude) {
+            if ((deal.lat || deal.latitude) && (deal.lng || deal.longitude)) {
                 const marker = createMarker(deal);
                 AppState.allMarkers.push(marker);
                 AppState.markerClusterGroup.addLayer(marker);
@@ -431,7 +431,7 @@
         });
         
         // Create marker
-        const marker = L.marker([deal.latitude, deal.longitude], { icon });
+        const marker = L.marker([deal.lat || deal.latitude, deal.lng || deal.longitude], { icon });
         
         // Popup
         const popupContent = createPopupContent(deal);
@@ -571,7 +571,7 @@
         const winRate = totalClosed > 0 ? ((wonDeals / totalClosed) * 100).toFixed(1) : 0;
         
         // Unmapped
-        const unmapped = allData.filter(d => !d.latitude || !d.longitude).length;
+        const unmapped = allData.filter(d => (!d.lat && !d.latitude) || (!d.lng && !d.longitude)).length;
         
         // Update DOM
         document.getElementById('stat-closed-won').textContent = formatCurrency(closedWon);
@@ -589,7 +589,7 @@
             ? AppState.rawData.propertyView 
             : AppState.rawData.hqView;
         
-        const unmapped = allData.filter(d => !d.latitude || !d.longitude);
+        const unmapped = allData.filter(d => (!d.lat && !d.latitude) || (!d.lng && !d.longitude));
         
         const listEl = document.getElementById('unmapped-list');
         listEl.innerHTML = unmapped.length === 0 
