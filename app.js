@@ -339,23 +339,16 @@
         AppState.markerClusterGroup.clearLayers();
         AppState.allMarkers = [];
         
-        console.log('[DEBUG] updateMap called, filteredDeals:', AppState.filteredDeals.length);
-        
         // Add filtered markers
-        AppState.filteredDeals.forEach((deal, i) => {
+        AppState.filteredDeals.forEach(deal => {
             const lat = deal.lat != null ? deal.lat : deal.latitude;
             const lng = deal.lng != null ? deal.lng : deal.longitude;
             if (lat != null && lng != null) {
                 const marker = createMarker(deal);
                 AppState.allMarkers.push(marker);
                 AppState.markerClusterGroup.addLayer(marker);
-                if (i === 0) console.log('[DEBUG] First marker added:', deal.name, lat, lng);
-            } else {
-                if (i < 3) console.log('[DEBUG] Skipped deal:', deal.name, 'lat:', deal.lat, 'lng:', deal.lng);
             }
         });
-        
-        console.log('[DEBUG] Total markers added:', AppState.allMarkers.length);
         
         // Fit bounds if markers exist
         if (AppState.allMarkers.length > 0) {
