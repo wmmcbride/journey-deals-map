@@ -20,7 +20,11 @@
         markerClusterGroup: null,
         filteredDeals: [],
         allMarkers: [],
-        rawData: null // Data source abstraction
+        rawData: null, // Data source abstraction
+        panelSwipeStartY: null,
+        panelSwipeDeltaY: 0,
+        modalSwipeStartY: null,
+        modalSwipeDeltaY: 0
     };
 
     // ============================================
@@ -34,6 +38,7 @@
         initMap();
         initVisualStates();
         setupEventListeners();
+        setupMobileInteractions();
         loadData();
     }
 
@@ -186,7 +191,71 @@
 
         // ESC key to close modal
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') {
+                closeModal();
+                closeFilterPanel();
+            }
+        });
+    }
+
+    function setupMobileInteractions() {
+        const backdrop = document.getElementById('mobile-panel-backdrop');
+        const panel = document.getElementById('filter-panel');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const unmappedOverlay = document.getElementById('unmapped-modal');
+
+        if (backdrop) {
+            backdrop.addEventListener('click', closeFilterPanel);
+        }
+
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('orientationchange', handleViewportChange);
+        handleViewportChange();
+
+        if (panel) {
+            panel.addEventListener('touchstart', (e) => {
+                if (!isMobileViewport()) return;
+                AppState.panelSwipeStartY = e.touches[0].clientY;
+                AppState.panelSwipeDeltaY = 0;
+            }, { passive: true });
+
+            panel.addEventListener('touchmove', (e) => {
+                if (!isMobileViewport() || AppState.panelSwipeStartY == null) return;
+                AppState.panelSwipeDeltaY = e.touches[0].clientY - AppState.panelSwipeStartY;
+            }, { passive: true });
+
+            panel.addEventListener('touchend', () => {
+                if (!isMobileViewport()) return;
+                if (AppState.panelSwipeDeltaY > 90) closeFilterPanel();
+                AppState.panelSwipeStartY = null;
+                AppState.panelSwipeDeltaY = 0;
+            }, { passive: true });
+        }
+
+        [modalOverlay, unmappedOverlay].forEach((overlay) => {
+            if (!overlay) return;
+            const content = overlay.querySelector('.modal-content');
+            if (!content) return;
+
+            content.addEventListener('touchstart', (e) => {
+                if (!isMobileViewport()) return;
+                if (content.scrollTop > 0) return;
+                AppState.modalSwipeStartY = e.touches[0].clientY;
+                AppState.modalSwipeDeltaY = 0;
+            }, { passive: true });
+
+            content.addEventListener('touchmove', (e) => {
+                if (!isMobileViewport() || AppState.modalSwipeStartY == null) return;
+                if (content.scrollTop > 0) return;
+                AppState.modalSwipeDeltaY = e.touches[0].clientY - AppState.modalSwipeStartY;
+            }, { passive: true });
+
+            content.addEventListener('touchend', () => {
+                if (!isMobileViewport()) return;
+                if (AppState.modalSwipeDeltaY > 90) closeModal();
+                AppState.modalSwipeStartY = null;
+                AppState.modalSwipeDeltaY = 0;
+            }, { passive: true });
         });
     }
 
@@ -328,7 +397,33 @@
 
     function toggleFilterPanel() {
         const panel = document.getElementById('filter-panel');
-        panel.classList.toggle('open');
+        const toggleButton = document.getElementById('toggle-filters');
+        if (!panel) return;
+
+        const willOpen = !panel.classList.contains('open');
+        panel.classList.toggle('open', willOpen);
+        document.body.classList.toggle('mobile-panel-open', willOpen && isMobileViewport());
+        if (toggleButton) toggleButton.setAttribute('aria-expanded', String(willOpen));
+
+        const backdrop = document.getElementById('mobile-panel-backdrop');
+        if (backdrop) {
+            backdrop.classList.toggle('hidden', !willOpen || !isMobileViewport());
+        }
+
+        queueMapResize();
+    }
+
+    function closeFilterPanel() {
+        const panel = document.getElementById('filter-panel');
+        const toggleButton = document.getElementById('toggle-filters');
+        if (!panel) return;
+        panel.classList.remove('open');
+        document.body.classList.remove('mobile-panel-open');
+        if (toggleButton) toggleButton.setAttribute('aria-expanded', 'false');
+
+        const backdrop = document.getElementById('mobile-panel-backdrop');
+        if (backdrop) backdrop.classList.add('hidden');
+        queueMapResize();
     }
 
     // ============================================
@@ -545,6 +640,24 @@
         document.getElementById('unmapped-modal').classList.add('hidden');
     }
 
+    function handleViewportChange() {
+        if (!isMobileViewport()) {
+            closeFilterPanel();
+        }
+        queueMapResize();
+    }
+
+    function queueMapResize() {
+        if (!AppState.map) return;
+        requestAnimationFrame(() => {
+            AppState.map.invalidateSize();
+        });
+    }
+
+    function isMobileViewport() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    }
+
     // ============================================
     // STATS CALCULATION
     // ============================================
@@ -657,5 +770,8 @@
         }
     `;
     document.head.appendChild(style);
+
+    // Legacy inline handler in index.html
+    window.closeUnmappedModal = closeModal;
 
 })();
